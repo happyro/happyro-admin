@@ -5,6 +5,7 @@ namespace Tests\Unit\Players;
 use App\Contracts\Audit\AuditWriter;
 use App\Contracts\Players\PlayerAccountRepository;
 use App\Data\Auth\ClientContext;
+use App\Exceptions\PlayerAccountNotFoundException;
 use App\Models\User;
 use App\Services\Players\PlayerManagementService;
 use Illuminate\Contracts\Hashing\Hasher;
@@ -45,5 +46,18 @@ final class PlayerManagementServiceTest extends TestCase
         $repository->expects('update')->with(7, ['user_pass' => 'hashed'])->andReturn((object) ['account_id' => 7]);
         $audit->expects('write')->twice();
         (new PlayerManagementService($repository, $audit, $hasher))->resetPassword(7, 'secret', new User, new ClientContext(null, null));
+    }
+
+    public function test_batch_delete_deduplicates_ids_and_ignores_missing_accounts(): void
+    {
+        $repository = Mockery::mock(PlayerAccountRepository::class);
+        $audit = Mockery::mock(AuditWriter::class);
+        $repository->expects('delete')->with(7)->andReturn(1);
+        $repository->expects('delete')->with(8)->andThrow(new PlayerAccountNotFoundException(8));
+        $audit->expects('write')->with('player.batch_delete', Mockery::type(ClientContext::class), Mockery::type(User::class), null, ['account_ids' => [7, 7, 8], 'count' => 1]);
+
+        $result = (new PlayerManagementService($repository, $audit, Mockery::mock(Hasher::class)))->batch('delete', [7, 7, 8], new User, new ClientContext(null, null));
+
+        $this->assertSame(1, $result);
     }
 }

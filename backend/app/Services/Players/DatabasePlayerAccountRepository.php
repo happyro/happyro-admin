@@ -47,14 +47,24 @@ final class DatabasePlayerAccountRepository implements PlayerAccountRepository
 
     public function update(int $accountId, array $attributes): object
     {
-        $this->query()->where('account_id', $accountId)->update($attributes);
+        $updated = $this->query()->where('account_id', $accountId)->update($attributes);
+        if ($updated === 0 && $this->find($accountId) === null) {
+            throw new \App\Exceptions\PlayerAccountNotFoundException($accountId);
+        }
 
         return $this->find($accountId);
     }
 
-    public function delete(int $accountId): void
+    public function delete(int $accountId): int
     {
-        $this->query()->where('account_id', $accountId)->delete();
+        $deleted = $this->query()->where('account_id', $accountId)->delete();
+        if ($deleted === 0) {
+            throw new \App\Exceptions\PlayerAccountNotFoundException($accountId);
+        }
+        DB::connection('game')->table(config('happyro.players.character_table', 'char'))
+            ->where('account_id', $accountId)->delete();
+
+        return $deleted;
     }
 
     public function updateState(array $accountIds, int $state): int

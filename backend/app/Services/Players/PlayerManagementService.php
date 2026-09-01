@@ -65,10 +65,15 @@ final class PlayerManagementService
 
     private function deleteMany(array $ids): int
     {
-        foreach ($ids as $id) {
-            $this->accounts->delete($id);
+        $count = 0;
+        foreach (array_values(array_unique($ids)) as $id) {
+            try {
+                $count += $this->accounts->delete($id);
+            } catch (\App\Exceptions\PlayerAccountNotFoundException) {
+                continue;
+            }
         }
 
-        return count($ids);
+        return $count;
     }
 }

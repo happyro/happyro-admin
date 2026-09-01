@@ -1,5 +1,5 @@
 [Unit]
-Description=HappyRO GM Ant Design Pro frontend
+Description=HappyRO Admin Ant Design Pro frontend
 After=network.target happyro-admin-backend.service
 
 [Service]

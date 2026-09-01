@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Players;
 
 use App\Data\Auth\ClientContext;
+use App\Exceptions\PlayerAccountNotFoundException;
 use App\Services\Players\PlayerManagementService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -50,6 +51,8 @@ final class PlayerAccountController
 
         try {
             $result = $this->players->update($accountId, $data, $request->user(), new ClientContext($request->ip(), (string) $request->userAgent()));
+        } catch (PlayerAccountNotFoundException) {
+            return response()->json(['message' => __('messages.player_account_not_found')], 404);
         } catch (QueryException) {
             return response()->json(['message' => __('messages.player_database_unconfigured')], 503);
         }
@@ -63,6 +66,8 @@ final class PlayerAccountController
 
         try {
             $result = $this->players->resetPassword($accountId, $data['password'], $request->user(), new ClientContext($request->ip(), (string) $request->userAgent()));
+        } catch (PlayerAccountNotFoundException) {
+            return response()->json(['message' => __('messages.player_account_not_found')], 404);
         } catch (QueryException) {
             return response()->json(['message' => __('messages.player_database_unconfigured')], 503);
         }
@@ -74,6 +79,8 @@ final class PlayerAccountController
     {
         try {
             $this->players->delete($accountId, $request->user(), $this->context($request));
+        } catch (PlayerAccountNotFoundException) {
+            return response()->json(['message' => __('messages.player_account_not_found')], 404);
         } catch (QueryException) {
             return response()->json(['message' => __('messages.player_database_unconfigured')], 503);
         }

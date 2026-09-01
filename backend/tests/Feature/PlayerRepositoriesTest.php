@@ -71,7 +71,10 @@ final class PlayerRepositoriesTest extends TestCase
             ['account_id' => 1, 'userid' => 'alice', 'email' => 'alice@example.com', 'sex' => 'F', 'group_id' => 0, 'state' => 0],
             ['account_id' => 2, 'userid' => 'bob', 'email' => 'bob@example.com', 'sex' => 'M', 'group_id' => 0, 'state' => 0],
         ]);
-        DB::connection('game')->table('char')->insert(['char_id' => 10, 'account_id' => 1, 'name' => 'Alice', 'class' => 0, 'base_level' => 1, 'job_level' => 1, 'online' => 1]);
+        DB::connection('game')->table('char')->insert([
+            ['char_id' => 10, 'account_id' => 1, 'name' => 'Alice', 'class' => 0, 'base_level' => 1, 'job_level' => 1, 'online' => 1],
+            ['char_id' => 11, 'account_id' => 2, 'name' => 'Bob', 'class' => 0, 'base_level' => 1, 'job_level' => 1, 'online' => 0],
+        ]);
         $this->actingAs($this->superAdmin());
         $this->postJson('/api/players/accounts/batch', ['action' => 'ban', 'account_ids' => [1, 2]])->assertOk()->assertJsonPath('count', 2);
         $this->assertSame(2, DB::connection('game')->table('login')->where('state', 1)->count());
@@ -79,6 +82,16 @@ final class PlayerRepositoriesTest extends TestCase
         $this->assertSame(0, DB::connection('game')->table('char')->value('online'));
         $this->deleteJson('/api/players/accounts/2')->assertOk();
         $this->assertDatabaseMissing('login', ['account_id' => 2], 'game');
+        $this->assertDatabaseMissing('char', ['account_id' => 2], 'game');
+        $this->assertDatabaseHas('char', ['account_id' => 1], 'game');
+    }
+
+    public function test_missing_account_actions_return_not_found(): void
+    {
+        $this->actingAs($this->superAdmin());
+
+        $this->patchJson('/api/players/accounts/999', ['state' => 1])->assertNotFound();
+        $this->deleteJson('/api/players/accounts/999')->assertNotFound();
     }
 
     private function superAdmin(): User
