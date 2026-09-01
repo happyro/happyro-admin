@@ -13,4 +13,10 @@ interface PlayerAccountRepository
     public function create(array $attributes): object;
 
     public function update(int $accountId, array $attributes): object;
+
+    public function delete(int $accountId): void;
+
+    public function updateState(array $accountIds, int $state): int;
+
+    public function kick(array $accountIds): int;
 }

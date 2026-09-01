@@ -65,6 +65,22 @@ final class PlayerRepositoriesTest extends TestCase
         $this->getJson('/api/players/login-logs')->assertUnauthorized();
     }
 
+    public function test_account_actions_change_player_data(): void
+    {
+        DB::connection('game')->table('login')->insert([
+            ['account_id' => 1, 'userid' => 'alice', 'email' => 'alice@example.com', 'sex' => 'F', 'group_id' => 0, 'state' => 0],
+            ['account_id' => 2, 'userid' => 'bob', 'email' => 'bob@example.com', 'sex' => 'M', 'group_id' => 0, 'state' => 0],
+        ]);
+        DB::connection('game')->table('char')->insert(['char_id' => 10, 'account_id' => 1, 'name' => 'Alice', 'class' => 0, 'base_level' => 1, 'job_level' => 1, 'online' => 1]);
+        $this->actingAs($this->superAdmin());
+        $this->postJson('/api/players/accounts/batch', ['action' => 'ban', 'account_ids' => [1, 2]])->assertOk()->assertJsonPath('count', 2);
+        $this->assertSame(2, DB::connection('game')->table('login')->where('state', 1)->count());
+        $this->postJson('/api/players/accounts/batch', ['action' => 'kick', 'account_ids' => [1]])->assertOk()->assertJsonPath('count', 1);
+        $this->assertSame(0, DB::connection('game')->table('char')->value('online'));
+        $this->deleteJson('/api/players/accounts/2')->assertOk();
+        $this->assertDatabaseMissing('login', ['account_id' => 2], 'game');
+    }
+
     private function superAdmin(): User
     {
         $role = Role::query()->create(['name' => 'super_admin', 'label' => 'Super administrator']);

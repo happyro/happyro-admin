@@ -69,4 +69,32 @@ final class PlayerAccountController
 
         return response()->json(['data' => $result]);
     }
+
+    public function destroy(Request $request, int $accountId): JsonResponse
+    {
+        try {
+            $this->players->delete($accountId, $request->user(), $this->context($request));
+        } catch (QueryException) {
+            return response()->json(['message' => __('messages.player_database_unconfigured')], 503);
+        }
+
+        return response()->json(['status' => 'ok']);
+    }
+
+    public function batch(Request $request): JsonResponse
+    {
+        $data = $request->validate(['action' => ['required', 'in:delete,ban,unban,kick'], 'account_ids' => ['required', 'array', 'min:1'], 'account_ids.*' => ['integer', 'min:1']]);
+        try {
+            $count = $this->players->batch($data['action'], $data['account_ids'], $request->user(), $this->context($request));
+        } catch (QueryException) {
+            return response()->json(['message' => __('messages.player_database_unconfigured')], 503);
+        }
+
+        return response()->json(['status' => 'ok', 'count' => $count]);
+    }
+
+    private function context(Request $request): ClientContext
+    {
+        return new ClientContext($request->ip(), (string) $request->userAgent());
+    }
 }

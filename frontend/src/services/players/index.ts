@@ -29,3 +29,6 @@ export async function resetPassword(id: number, password: string) {
 export async function registerAccount(data: Record<string, unknown>) {
   return request('/api/players/accounts', { method: 'POST', data });
 }
+
+export async function deleteAccount(id: number) { return request(`/api/players/accounts/${id}`, { method: 'DELETE' }); }
+export async function batchAccounts(action: 'delete' | 'ban' | 'unban' | 'kick', accountIds: number[]) { return request<{ count: number }>('/api/players/accounts/batch', { method: 'POST', data: { action, account_ids: accountIds } }); }

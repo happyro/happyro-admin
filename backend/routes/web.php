@@ -26,4 +26,6 @@ Route::prefix('api/players')->middleware(['auth:sanctum', 'permission:players.vi
     Route::get('/login-logs', [LoginLogController::class, 'index']);
     Route::patch('/accounts/{accountId}', [PlayerAccountController::class, 'update'])->middleware('permission:players.edit');
     Route::post('/accounts/{accountId}/password', [PlayerAccountController::class, 'password'])->middleware('permission:players.edit');
+    Route::post('/accounts/batch', [PlayerAccountController::class, 'batch'])->middleware('permission:players.edit');
+    Route::delete('/accounts/{accountId}', [PlayerAccountController::class, 'destroy'])->middleware('permission:players.edit');
 });

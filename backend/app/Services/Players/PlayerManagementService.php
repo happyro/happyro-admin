@@ -42,4 +42,33 @@ final class PlayerManagementService
 
         return $account;
     }
+
+    public function delete(int $id, User $operator, ClientContext $context): void
+    {
+        $this->accounts->delete($id);
+        $this->audit->write('player.deleted', $context, $operator, metadata: ['account_id' => $id]);
+    }
+
+    public function batch(string $action, array $ids, User $operator, ClientContext $context): int
+    {
+        $count = match ($action) {
+            'delete' => $this->deleteMany($ids),
+            'ban' => $this->accounts->updateState($ids, 1),
+            'unban' => $this->accounts->updateState($ids, 0),
+            'kick' => $this->accounts->kick($ids),
+            default => throw new \InvalidArgumentException('Unsupported player action.'),
+        };
+        $this->audit->write('player.batch_'.$action, $context, $operator, metadata: ['account_ids' => $ids, 'count' => $count]);
+
+        return $count;
+    }
+
+    private function deleteMany(array $ids): int
+    {
+        foreach ($ids as $id) {
+            $this->accounts->delete($id);
+        }
+
+        return count($ids);
+    }
 }

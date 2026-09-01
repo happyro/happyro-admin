@@ -51,4 +51,20 @@ final class DatabasePlayerAccountRepository implements PlayerAccountRepository
 
         return $this->find($accountId);
     }
+
+    public function delete(int $accountId): void
+    {
+        $this->query()->where('account_id', $accountId)->delete();
+    }
+
+    public function updateState(array $accountIds, int $state): int
+    {
+        return $this->query()->whereIn('account_id', $accountIds)->update(['state' => $state]);
+    }
+
+    public function kick(array $accountIds): int
+    {
+        return DB::connection('game')->table(config('happyro.players.character_table', 'char'))
+            ->whereIn('account_id', $accountIds)->where('online', 1)->update(['online' => 0]);
+    }
 }
