@@ -26,6 +26,7 @@ export default [
       {
         path: '/operations/item-grants',
         name: 'itemGrants',
+        access: 'canGrantItems',
         component: './operations/item-grants',
       },
     ],

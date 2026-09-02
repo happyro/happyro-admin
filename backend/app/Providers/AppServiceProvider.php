@@ -13,6 +13,7 @@ use App\Contracts\GameData\ItemRepository;
 use App\Contracts\GameData\ItemSnapshotReader;
 use App\Contracts\GameData\ItemViewBuilder;
 use App\Contracts\Operations\ItemGrantRepository;
+use App\Contracts\Operations\ItemGrantTargetRepository;
 use App\Contracts\Players\LoginLogRepository;
 use App\Contracts\Players\PlayerAccountRepository;
 use App\Contracts\Players\PlayerCharacterRepository;
@@ -27,6 +28,7 @@ use App\Services\GameData\DatabaseItemViewBuilder;
 use App\Services\GameData\JsonItemSnapshotReader;
 use App\Services\GameData\LocalItemAssetRepository;
 use App\Services\Operations\DatabaseItemGrantRepository;
+use App\Services\Operations\DatabaseItemGrantTargetRepository;
 use App\Services\Operations\ItemGrantService;
 use App\Services\Players\DatabaseLoginLogRepository;
 use App\Services\Players\DatabasePlayerAccountRepository;
@@ -60,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
             );
         });
         $this->app->bind(ItemGrantRepository::class, DatabaseItemGrantRepository::class);
+        $this->app->bind(ItemGrantTargetRepository::class, DatabaseItemGrantTargetRepository::class);
         $this->app->bind(ItemGrantService::class);
         $this->app->bind(LoginLogRepository::class, DatabaseLoginLogRepository::class);
     }

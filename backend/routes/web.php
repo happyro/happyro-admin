@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\GameData\ItemController;
 use App\Http\Controllers\Operations\ItemGrantController;
+use App\Http\Controllers\Operations\ItemGrantItemController;
+use App\Http\Controllers\Operations\ItemGrantTargetController;
 use App\Http\Controllers\Players\LoginLogController;
 use App\Http\Controllers\Players\PlayerAccountController;
 use App\Http\Controllers\Players\PlayerCharacterController;
@@ -41,5 +43,7 @@ Route::prefix('api/game-data')->middleware(['auth:sanctum', 'permission:game-dat
 });
 
 Route::prefix('api/operations')->middleware(['auth:sanctum', 'permission:operations.item-grant'])->group(function () {
+    Route::get('/item-grant-items', [ItemGrantItemController::class, 'index']);
+    Route::get('/item-grant-targets', [ItemGrantTargetController::class, 'index']);
     Route::post('/item-grants/mail', [ItemGrantController::class, 'store']);
 });

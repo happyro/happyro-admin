@@ -5,9 +5,10 @@ import {
   type ProFormInstance,
   ProTable,
 } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
+import { useAccess, useIntl } from '@umijs/max';
 import { App, Button, Descriptions, Drawer, Tag } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import ItemGrantModal from '@/components/ItemGrantModal';
 import {
   type GameDataItem,
   getItem,
@@ -45,6 +46,7 @@ function sourceLabel(source: GameDataItem['source'], t: Translate): string {
 
 export default function Items() {
   const intl = useIntl();
+  const access = useAccess();
   const { message } = App.useApp();
   const formRef = useRef<ProFormInstance | undefined>(undefined);
   const [detail, setDetail] = useState<GameDataItem>();
@@ -164,20 +166,28 @@ export default function Items() {
         title: t('common.actions', '操作'),
         valueType: 'option',
         render: (_, row) => (
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={async () => {
-              const query = formRef.current?.getFieldsValue() as ItemQuery;
-              setDetail((await getItem(row.Id, query)).data);
-            }}
-          >
-            {t('common.detail', '详情')}
-          </Button>
+          <>
+            {access.canGrantItems && (
+              <ItemGrantModal
+                itemId={row.Id}
+                itemName={itemName(row, locale)}
+              />
+            )}
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={async () => {
+                const query = formRef.current?.getFieldsValue() as ItemQuery;
+                setDetail((await getItem(row.Id, query)).data);
+              }}
+            >
+              {t('common.detail', '详情')}
+            </Button>
+          </>
         ),
       },
     ],
-    [intl.locale, versions],
+    [access.canGrantItems, intl.locale, versions],
   );
 
   return (
