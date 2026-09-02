@@ -73,9 +73,11 @@
 
 ## 快照生成
 
-- 使用根仓库 `tools/resources/generate_item_catalog.py` 生成后台本地物品快照。
-- 命令同时读取当前 `happyro-server` 中文数据库和指定 Git 版本的英文数据库，按物品 ID 合并为 `item-catalog/v2` 的 `names` 映射。
-- 默认使用服务端英文基线 `2fe6ab3dc4d8`；需要复现其他历史版本时可显式传入 `--english-ref`，禁止从已翻译的服务端文件猜测英文名称。
+- 使用根仓库 `tools/resources/item_catalog/main.py server` 生成后台本地服务端物品快照。
+- 使用根仓库 `tools/resources/item_catalog/main.py client` 生成仅客户端快照 `backend/resources/game/items/client-kro-20211105.json`。
+- 服务端工具负责读取 rAthena 数据并生成 Renewal 快照；默认使用服务端英文基线 `2fe6ab3dc4d8`，禁止从已翻译的服务端文件猜测英文名称。
+- 仅客户端工具读取 kRO merged 的 `itemInfo_true.json`，用 Renewal 快照中的 `en-US` 名称补齐英文；生成前要求客户端 ID 全部命中服务端快照。
+- 两条生成流水线共用分层工程，但客户端和服务端的领域规则互相隔离；完整结构、参数和测试命令见根仓库 `tools/resources/README.md`。
 
 ## 验收记录
 
