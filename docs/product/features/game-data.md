@@ -14,7 +14,7 @@
 ## 数据来源
 
 - 服务器属性来自 HappyRO Server `db/re/item_db_*.yml`。
-- 客户端 `itemInfo_true.json` 是从 Lua 5.1 字节码离线提取的规范化快照；说明和资源名通过离线索引写入 `descriptions.json`、`icon-map.json`。
+- 客户端 `itemInfo_true.json` 是从 Lua 5.1 字节码离线提取的规范化快照；说明和资源路径通过离线索引写入 `descriptions.json`、`item-assets.json`。
 - 原始 kRO 资源来自 `inputs/runtime/kro-20211105/client/data.grf`，全量解压结果位于被 Git 忽略的 `work/grf-extract/kro-20211105/data/`。
 - 解压清单 `manifest.json` 保存原始路径、规范化路径、文件大小和 SHA-256；提取工具位于 `repos/happyro-gateway/tools/extract-grf.mjs`。
 - 管理后台通过可配置的 `GAME_RESOURCE_ROOT` 读取本地资源，默认指向上述解压目录，不把大体积 GRF 或全量解压文件提交到 Git。
@@ -98,10 +98,11 @@
 ## 快照生成
 
 - 使用根仓库 `tools/resources/catalog/main.py items server` 生成后台本地服务端物品快照。
-- 使用根仓库 `tools/resources/catalog/main.py items client` 一次生成仅客户端快照、图标映射和说明索引。
+- 使用根仓库 `tools/resources/catalog/main.py items client` 一次生成仅客户端快照、资源路径映射和说明索引。
 - 产物统一写入 `backend/resources/game-data/items/`，生成完成后再由 Laravel 导入命令同步至 MariaDB。
 - 服务端工具负责读取 rAthena 数据并生成 Renewal 快照；默认使用服务端英文基线 `2fe6ab3dc4d8`，禁止从已翻译的服务端文件猜测英文名称。
 - 仅客户端工具读取 kRO merged 的 `itemInfo_true.json`，用 Renewal 快照中的 `en-US` 名称补齐英文；生成前要求客户端 ID 全部命中服务端快照。
+- 资源路径必须以 GRF 解压 `manifest.json` 为准：先精确匹配，再进行 Unicode NFC 和不区分大小写匹配，将磁盘真实相对路径写入 `item-assets.json`。禁止在 Laravel 请求期间扫描目录或猜测文件名。
 - 两条生成流水线共用通用游戏资料构建工程，但客户端和服务端的领域规则互相隔离；完整结构、参数和测试命令见根仓库 `tools/resources/README.md`。
 
 ## 验收记录

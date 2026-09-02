@@ -12,8 +12,6 @@ return ['players' => [
     ],
     'default_client_version' => 'kro-20211105',
     'default_server_version' => '2fe6ab3dc4d8',
-    'item_icon_map' => base_path('resources/game-data/items/icon-map.json'),
+    'item_asset_map' => base_path('resources/game-data/items/item-assets.json'),
     'grf_root' => env('GAME_RESOURCE_ROOT', base_path('../../../work/grf-extract/kro-20211105/data/data')),
-    'item_icon_relative_root' => 'texture/유저인터페이스/item',
-    'item_illustration_relative_root' => 'texture/유저인터페이스/collection',
 ]];

@@ -53,12 +53,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ItemRepository::class, DatabaseItemRepository::class);
         $this->app->bind(ItemSnapshotReader::class, JsonItemSnapshotReader::class);
         $this->app->bind(ItemViewBuilder::class, DatabaseItemViewBuilder::class);
-        $this->app->bind(ItemAssetRepository::class, function ($app) {
+        $this->app->bind(ItemAssetRepository::class, function () {
             return new LocalItemAssetRepository(
-                config('happyro.game_data.item_icon_map'),
+                config('happyro.game_data.item_asset_map'),
                 config('happyro.game_data.grf_root'),
-                config('happyro.game_data.item_icon_relative_root'),
-                config('happyro.game_data.item_illustration_relative_root'),
             );
         });
         $this->app->bind(ItemGrantRepository::class, DatabaseItemGrantRepository::class);

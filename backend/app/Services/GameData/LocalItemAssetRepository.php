@@ -7,40 +7,38 @@ use RuntimeException;
 
 final class LocalItemAssetRepository implements ItemAssetRepository
 {
-    private ?array $iconMap = null;
+    private ?array $assetMap = null;
 
     public function __construct(
-        private readonly string $iconMapPath,
+        private readonly string $assetMapPath,
         private readonly string $resourceRoot,
-        private readonly string $iconRelativeRoot,
-        private readonly string $illustrationRelativeRoot,
     ) {}
 
     public function iconPath(int $itemId): ?string
     {
-        return $this->resourcePath($itemId, $this->iconRelativeRoot);
+        return $this->resourcePath($itemId, 'icon');
     }
 
     public function illustrationPath(int $itemId): ?string
     {
-        return $this->resourcePath($itemId, $this->illustrationRelativeRoot);
+        return $this->resourcePath($itemId, 'illustration');
     }
 
-    private function resourcePath(int $itemId, string $relativeRoot): ?string
+    private function resourcePath(int $itemId, string $assetType): ?string
     {
-        $resourceName = $this->iconMap()[(string) $itemId] ?? null;
-        if (! is_string($resourceName) || $resourceName === '') {
+        $relativePath = $this->assetMap()[(string) $itemId][$assetType] ?? null;
+        if (! is_string($relativePath) || $relativePath === '') {
             return null;
         }
         $root = realpath($this->resourceRoot);
-        $path = realpath($this->resourceRoot.DIRECTORY_SEPARATOR.$relativeRoot.DIRECTORY_SEPARATOR.$resourceName.'.bmp');
+        $path = realpath($this->resourceRoot.DIRECTORY_SEPARATOR.$relativePath);
 
         return $path && $root && str_starts_with($path, $root.DIRECTORY_SEPARATOR) && is_file($path) ? $path : null;
     }
 
-    private function iconMap(): array
+    private function assetMap(): array
     {
-        return $this->iconMap ??= $this->readItems($this->iconMapPath, 'Item icon map');
+        return $this->assetMap ??= $this->readItems($this->assetMapPath, 'Item asset map');
     }
 
     private function readItems(string $path, string $label): array
