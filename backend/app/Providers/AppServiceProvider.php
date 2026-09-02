@@ -11,6 +11,7 @@ use App\Contracts\Auth\UserRepository;
 use App\Contracts\GameData\ItemAssetRepository;
 use App\Contracts\GameData\ItemRepository;
 use App\Contracts\GameData\ItemSnapshotReader;
+use App\Contracts\GameData\ItemViewBuilder;
 use App\Contracts\Operations\ItemGrantRepository;
 use App\Contracts\Players\LoginLogRepository;
 use App\Contracts\Players\PlayerAccountRepository;
@@ -22,6 +23,7 @@ use App\Services\Auth\EloquentUserRepository;
 use App\Services\Auth\RateLimiterLoginThrottle;
 use App\Services\Auth\SessionAuthenticationService;
 use App\Services\GameData\DatabaseItemRepository;
+use App\Services\GameData\DatabaseItemViewBuilder;
 use App\Services\GameData\JsonItemSnapshotReader;
 use App\Services\GameData\LocalItemAssetRepository;
 use App\Services\Operations\DatabaseItemGrantRepository;
@@ -48,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PlayerCharacterRepository::class, DatabasePlayerCharacterRepository::class);
         $this->app->bind(ItemRepository::class, DatabaseItemRepository::class);
         $this->app->bind(ItemSnapshotReader::class, JsonItemSnapshotReader::class);
+        $this->app->bind(ItemViewBuilder::class, DatabaseItemViewBuilder::class);
         $this->app->bind(ItemAssetRepository::class, function ($app) {
             return new LocalItemAssetRepository(
                 config('happyro.game_data.item_icon_map'),

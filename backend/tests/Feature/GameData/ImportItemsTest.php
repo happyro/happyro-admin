@@ -3,6 +3,7 @@
 namespace Tests\Feature\GameData;
 
 use App\Contracts\GameData\ItemSnapshotReader;
+use App\Contracts\GameData\ItemViewBuilder;
 use App\Data\GameData\ItemCatalogSnapshot;
 use App\Services\GameData\ImportItemsService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -21,7 +22,9 @@ final class ImportItemsTest extends TestCase
             $this->snapshot([501 => $this->item('红色药水', 'Red Potion'), 502 => $this->item('橙色药水', 'Orange Potion')]),
             $this->snapshot([501 => $this->item('红色药水（新）', 'Red Potion')], 'hash-2'),
         );
-        $service = new ImportItemsService($reader, app('db'));
+        $views = Mockery::mock(ItemViewBuilder::class);
+        $views->expects('rebuildAll')->twice()->andReturn(['combinations' => 0, 'records' => 0]);
+        $service = new ImportItemsService($reader, $views, app('db'));
 
         $first = $service->import('snapshot.json');
         $second = $service->import('snapshot.json');
@@ -30,9 +33,10 @@ final class ImportItemsTest extends TestCase
         $this->assertSame(1, $second['imported']);
         $this->assertSame(1, $second['deleted']);
         $this->assertDatabaseCount('game_data_catalogs', 1);
-        $this->assertDatabaseCount('game_data_items', 1);
-        $this->assertDatabaseHas('game_data_items', ['item_id' => 501, 'name_zh_cn' => '红色药水（新）']);
-        $this->assertDatabaseMissing('game_data_items', ['item_id' => 502]);
+        $this->assertDatabaseCount('game_items', 1);
+        $this->assertDatabaseCount('game_item_sources', 1);
+        $this->assertDatabaseHas('game_items', ['item_id' => 501]);
+        $this->assertDatabaseHas('game_item_sources', ['name_zh_cn' => '红色药水（新）']);
     }
 
     public function test_command_without_source_only_displays_usage(): void
@@ -48,9 +52,45 @@ final class ImportItemsTest extends TestCase
     {
         $reader = Mockery::mock(ItemSnapshotReader::class);
         $reader->expects('read')->once()->andReturn($this->snapshot([]));
+        $views = Mockery::mock(ItemViewBuilder::class);
+        $views->expects('rebuildAll')->never();
 
         $this->expectException(RuntimeException::class);
-        (new ImportItemsService($reader, app('db')))->import('snapshot.json');
+        (new ImportItemsService($reader, $views, app('db')))->import('snapshot.json');
+    }
+
+    public function test_import_rebuilds_merged_query_views(): void
+    {
+        $reader = Mockery::mock(ItemSnapshotReader::class);
+        $reader->expects('read')->twice()->andReturn(
+            $this->snapshot([501 => $this->item('客户端红药', 'Red Potion')]),
+            new ItemCatalogSnapshot('server', 'renewal', 'server1', 'server-hash', [], [
+                501 => [
+                    'names' => ['zh-CN' => '服务端红药', 'en-US' => 'Red Potion'],
+                    'AegisName' => 'Red_Potion',
+                    'Type' => 'Healing',
+                    'Weight' => 70,
+                ],
+            ]),
+        );
+        $service = new ImportItemsService($reader, app(ItemViewBuilder::class), app('db'));
+
+        $results = $service->importMany(['client.json', 'server.json']);
+        $result = $results[1];
+
+        $this->assertCount(2, $results);
+        $this->assertSame(1, $result['views']);
+        $this->assertDatabaseCount('game_items', 1);
+        $this->assertDatabaseCount('game_item_sources', 2);
+        $this->assertDatabaseHas('game_item_views', [
+            'item_id' => 501,
+            'client_exists' => true,
+            'server_exists' => true,
+            'name_zh_cn' => '客户端红药',
+            'aegis_name' => 'Red_Potion',
+            'item_type' => 'Healing',
+            'weight' => 70,
+        ]);
     }
 
     /** @param array<int, array<string, mixed>> $items */

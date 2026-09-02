@@ -32,15 +32,19 @@ class ImportGameDataItems extends Command
             return self::SUCCESS;
         }
 
-        foreach (array_keys($selected) as $source) {
-            $result = $this->items->import((string) config("happyro.game_data.item_snapshots.{$source}"));
+        $paths = array_map(
+            fn (string $source): string => (string) config("happyro.game_data.item_snapshots.{$source}"),
+            array_keys($selected),
+        );
+        foreach ($this->items->importMany($paths) as $result) {
             $this->line(sprintf(
-                '%s/%s %s: imported=%d deleted=%d',
+                '%s/%s %s: imported=%d deleted=%d views=%d',
                 $result['source'],
                 $result['ruleset'],
                 $result['version'],
                 $result['imported'],
                 $result['deleted'],
+                $result['views'],
             ));
         }
 

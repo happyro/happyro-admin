@@ -3,8 +3,10 @@
 namespace Tests\Feature\GameData;
 
 use App\Contracts\GameData\ItemAssetRepository;
+use App\Contracts\GameData\ItemViewBuilder;
 use App\Models\GameDataCatalog;
-use App\Models\GameDataItem;
+use App\Models\GameItem;
+use App\Models\GameItemSource;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -18,34 +20,44 @@ final class ListItemsTest extends TestCase
     {
         $client = GameDataCatalog::factory()->create(['source' => 'client', 'ruleset' => 'client', 'source_version' => 'kro-20211105']);
         $server = GameDataCatalog::factory()->create(['source' => 'server', 'ruleset' => 'renewal', 'source_version' => 'server123']);
-        GameDataItem::factory()->for($client, 'catalog')->create([
-            'item_id' => 501,
+        $this->source($client, 501, [
             'name_zh_cn' => '客户端红药',
             'name_en_us' => 'Red Potion',
             'description' => ['恢复 HP'],
         ]);
-        GameDataItem::factory()->for($client, 'catalog')->create(['item_id' => 502, 'name_zh_cn' => '客户端橙药', 'name_en_us' => 'Orange Potion']);
-        GameDataItem::factory()->for($server, 'catalog')->create(['item_id' => 501, 'name_zh_cn' => '服务端红药', 'name_en_us' => 'Red Potion', 'item_type' => 'Healing']);
-        GameDataItem::factory()->for($server, 'catalog')->create(['item_id' => 503, 'name_zh_cn' => '服务端黄药', 'name_en_us' => 'Yellow Potion', 'item_type' => 'Healing']);
+        $this->source($client, 502, ['name_zh_cn' => '客户端橙药', 'name_en_us' => 'Orange Potion']);
+        $this->source($server, 501, ['name_zh_cn' => '服务端红药', 'name_en_us' => 'Red Potion', 'aegis_name' => 'Red_Potion', 'item_type' => 'Healing', 'payload' => ['Weight' => 70]]);
+        $this->source($server, 503, ['name_zh_cn' => '服务端黄药', 'name_en_us' => 'Yellow Potion', 'item_type' => 'Healing']);
+        app(ItemViewBuilder::class)->rebuildAll();
         $this->withoutAssets();
         $this->actingAs($this->superAdmin());
 
-        $this->getJson('/api/game-data/items?range=client&clientVersion=kro-20211105')->assertOk()->assertJsonPath('total', 2);
-        $this->getJson('/api/game-data/items?range=server&serverVersion=server123')->assertOk()->assertJsonPath('total', 2);
+        $versions = 'clientVersion=kro-20211105&serverVersion=server123';
+        $this->getJson("/api/game-data/items?range=client&{$versions}")->assertOk()->assertJsonPath('total', 2);
+        $this->getJson("/api/game-data/items?range=server&{$versions}")->assertOk()->assertJsonPath('total', 2);
         $this->getJson('/api/game-data/items?range=all&clientVersion=kro-20211105&serverVersion=server123')
             ->assertOk()
             ->assertJsonPath('total', 3)
             ->assertJsonPath('data.0.source', 'both')
             ->assertJsonPath('data.0.names.zh-CN', '客户端红药')
             ->assertJsonPath('data.0.description.0', '恢复 HP');
+
+        $this->getJson("/api/game-data/items?range=client&{$versions}&type=Healing")
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('data.0.Id', 501)
+            ->assertJsonPath('data.0.AegisName', 'Red_Potion')
+            ->assertJsonPath('data.0.Weight', 70)
+            ->assertJsonPath('data.0.Type', 'Healing');
     }
 
     public function test_item_api_filters_across_merged_sources(): void
     {
         $client = GameDataCatalog::factory()->create(['source' => 'client', 'ruleset' => 'client', 'source_version' => 'client1']);
         $server = GameDataCatalog::factory()->create(['source' => 'server', 'ruleset' => 'renewal', 'source_version' => 'server1']);
-        GameDataItem::factory()->for($client, 'catalog')->create(['item_id' => 501, 'name_zh_cn' => '特别红药', 'name_en_us' => 'Red Potion']);
-        GameDataItem::factory()->for($server, 'catalog')->create(['item_id' => 501, 'name_zh_cn' => '红色药水', 'name_en_us' => 'Red Potion', 'item_type' => 'Healing']);
+        $this->source($client, 501, ['name_zh_cn' => '特别红药', 'name_en_us' => 'Red Potion']);
+        $this->source($server, 501, ['name_zh_cn' => '红色药水', 'name_en_us' => 'Red Potion', 'item_type' => 'Healing']);
+        app(ItemViewBuilder::class)->rebuildAll();
         $this->withoutAssets();
         $this->actingAs($this->superAdmin());
 
@@ -70,6 +82,18 @@ final class ListItemsTest extends TestCase
         $this->mock(ItemAssetRepository::class)
             ->shouldReceive('iconPath', 'illustrationPath')
             ->andReturnNull();
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function source(GameDataCatalog $catalog, int $itemId, array $attributes): GameItemSource
+    {
+        $item = GameItem::query()->firstOrCreate(['item_id' => $itemId]);
+
+        return GameItemSource::factory()->create([
+            'game_item_id' => $item->id,
+            'game_data_catalog_id' => $catalog->id,
+            ...$attributes,
+        ]);
     }
 
     private function superAdmin(): User

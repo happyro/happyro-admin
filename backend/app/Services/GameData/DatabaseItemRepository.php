@@ -5,51 +5,34 @@ namespace App\Services\GameData;
 use App\Contracts\GameData\ItemRepository;
 use App\Data\GameData\ItemQuery;
 use App\Models\GameDataCatalog;
-use App\Models\GameDataItem;
+use App\Models\GameItemView;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 final class DatabaseItemRepository implements ItemRepository
 {
     public function search(ItemQuery $query): array
     {
-        $catalogs = $this->catalogs($query->range, $query->clientVersion, $query->serverVersion);
-        if ($catalogs->isEmpty()) {
-            return ['data' => [], 'total' => 0];
-        }
+        $builder = $this->query($query->clientVersion, $query->serverVersion, $query->range)
+            ->when($query->query, fn (Builder $items, string $value): Builder => $this->matching($items, $value))
+            ->when($query->type, fn (Builder $items, string $value): Builder => $items->where('item_type', $value));
+        $total = (clone $builder)->count();
+        $records = $builder
+            ->with($this->relations())
+            ->orderBy('item_id')
+            ->forPage($query->page, $query->perPage)
+            ->get();
 
-        $catalogIds = $catalogs->pluck('id');
-        $ids = GameDataItem::query()
-            ->whereIn('game_data_catalog_id', $catalogIds)
-            ->when($query->query, fn (Builder $builder, string $value): Builder => $this->matching($builder, $catalogIds, $value))
-            ->when($query->type, fn (Builder $builder, string $value): Builder => $this->matchingType($builder, $catalogIds, $value))
-            ->select('item_id')
-            ->distinct();
-        $total = (clone $ids)->count('item_id');
-        $pageIds = $ids->orderBy('item_id')->forPage($query->page, $query->perPage)->pluck('item_id');
-        $records = GameDataItem::query()
-            ->with('catalog:id,source,source_version')
-            ->whereIn('game_data_catalog_id', $catalogIds)
-            ->whereIn('item_id', $pageIds)
-            ->get()
-            ->groupBy('item_id');
-
-        return [
-            'data' => $pageIds->map(fn (int $itemId): array => $this->merge($records->get($itemId, collect())))->all(),
-            'total' => $total,
-        ];
+        return ['data' => $records->map($this->payload(...))->all(), 'total' => $total];
     }
 
     public function find(int $itemId, string $range, string $clientVersion, string $serverVersion): ?array
     {
-        $catalogs = $this->catalogs($range, $clientVersion, $serverVersion);
-        $records = GameDataItem::query()
-            ->with('catalog:id,source,source_version')
-            ->whereIn('game_data_catalog_id', $catalogs->pluck('id'))
+        $record = $this->query($clientVersion, $serverVersion, $range)
+            ->with($this->relations())
             ->where('item_id', $itemId)
-            ->get();
+            ->first();
 
-        return $records->isEmpty() ? null : $this->merge($records);
+        return $record ? $this->payload($record) : null;
     }
 
     public function versions(): array
@@ -69,78 +52,82 @@ final class DatabaseItemRepository implements ItemRepository
         ];
     }
 
-    /** @return Collection<int, GameDataCatalog> */
-    private function catalogs(string $range, string $clientVersion, string $serverVersion): Collection
+    private function query(string $clientVersion, string $serverVersion, string $range): Builder
+    {
+        $clientCatalog = $this->catalogId('client', 'client', $clientVersion);
+        $serverCatalog = $this->catalogId('server', 'renewal', $serverVersion);
+
+        return GameItemView::query()
+            ->where('client_catalog_id', $clientCatalog ?? 0)
+            ->where('server_catalog_id', $serverCatalog ?? 0)
+            ->when($range === 'client', fn (Builder $query): Builder => $query->where('client_exists', true))
+            ->when($range === 'server', fn (Builder $query): Builder => $query->where('server_exists', true));
+    }
+
+    private function catalogId(string $source, string $ruleset, string $version): ?int
     {
         return GameDataCatalog::query()
             ->where('resource_type', 'items')
-            ->where(function (Builder $query) use ($range, $clientVersion, $serverVersion): void {
-                if ($range !== 'server') {
-                    $query->orWhere(fn (Builder $client): Builder => $client
-                        ->where('source', 'client')
-                        ->where('ruleset', 'client')
-                        ->where('source_version', $clientVersion));
-                }
-                if ($range !== 'client') {
-                    $query->orWhere(fn (Builder $server): Builder => $server
-                        ->where('source', 'server')
-                        ->where('ruleset', 'renewal')
-                        ->where('source_version', $serverVersion));
-                }
-            })
-            ->get();
+            ->where('source', $source)
+            ->where('ruleset', $ruleset)
+            ->where('source_version', $version)
+            ->value('id');
     }
 
-    private function matching(Builder $builder, Collection $catalogIds, string $value): Builder
+    private function matching(Builder $builder, string $value): Builder
     {
         $escaped = addcslashes($value, '%_\\');
 
-        return $builder->whereIn('item_id', GameDataItem::query()
-            ->whereIn('game_data_catalog_id', $catalogIds)
-            ->where(function (Builder $match) use ($escaped, $value): void {
-                $match->where('name_zh_cn', 'like', "%{$escaped}%")
-                    ->orWhere('name_en_us', 'like', "%{$escaped}%")
-                    ->orWhere('aegis_name', 'like', "%{$escaped}%");
-                if (ctype_digit($value)) {
-                    $match->orWhere('item_id', (int) $value);
-                }
-            })
-            ->select('item_id'));
+        return $builder->where(function (Builder $match) use ($escaped, $value): void {
+            $match->where('name_zh_cn', 'like', "%{$escaped}%")
+                ->orWhere('name_en_us', 'like', "%{$escaped}%")
+                ->orWhere('aegis_name', 'like', "%{$escaped}%");
+            if (ctype_digit($value)) {
+                $match->orWhere('item_id', (int) $value);
+            }
+        });
     }
 
-    private function matchingType(Builder $builder, Collection $catalogIds, string $type): Builder
+    /** @return list<string> */
+    private function relations(): array
     {
-        return $builder->whereIn('item_id', GameDataItem::query()
-            ->whereIn('game_data_catalog_id', $catalogIds)
-            ->where('item_type', $type)
-            ->select('item_id'));
-    }
-
-    /**
-     * @param  Collection<int, GameDataItem>  $records
-     * @return array<string, mixed>
-     */
-    private function merge(Collection $records): array
-    {
-        $client = $records->first(fn (GameDataItem $item): bool => $item->catalog->source === 'client');
-        $server = $records->first(fn (GameDataItem $item): bool => $item->catalog->source === 'server');
-        $primary = $client ?? $server;
-        $payload = [...($server?->payload ?? []), ...($client?->payload ?? [])];
-
         return [
-            'Id' => $primary->item_id,
-            ...$payload,
-            'AegisName' => $server?->aegis_name,
-            'Type' => $server?->item_type,
-            'names' => [
-                'zh-CN' => $client?->name_zh_cn ?? $server?->name_zh_cn,
-                'en-US' => $client?->name_en_us ?? $server?->name_en_us,
-            ],
-            'resourceName' => $client?->resource_name,
-            'description' => $client?->description,
-            'source' => $client && $server ? 'both' : ($client ? 'client' : 'server'),
-            'clientResourceVersion' => $client?->catalog->source_version,
-            'serverVersion' => $server?->catalog->source_version,
+            'clientCatalog:id,source_version',
+            'serverCatalog:id,source_version',
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function payload(GameItemView $view): array
+    {
+        return [
+            'Id' => $view->item_id,
+            ...$view->payload,
+            'AegisName' => $view->aegis_name,
+            'Type' => $view->item_type,
+            'Buy' => $view->buy,
+            'Sell' => $view->sell,
+            'Weight' => $view->weight,
+            'Attack' => $view->attack,
+            'Defense' => $view->defense,
+            'Slots' => $view->slots,
+            'Script' => $view->script,
+            'names' => ['zh-CN' => $view->name_zh_cn, 'en-US' => $view->name_en_us],
+            'resourceName' => $view->resource_name,
+            'description' => $view->description,
+            'source' => $this->source($view),
+            'fieldSources' => $view->field_sources,
+            'clientResourceVersion' => $view->client_exists ? $view->clientCatalog->source_version : null,
+            'serverVersion' => $view->server_exists ? $view->serverCatalog->source_version : null,
+        ];
+    }
+
+    private function source(GameItemView $view): string
+    {
+        if ($view->client_exists && $view->server_exists) {
+            return 'both';
+        }
+
+        return $view->client_exists ? 'client' : 'server';
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Services\GameData;
 
 use App\Contracts\GameData\ItemSnapshotReader;
+use App\Contracts\GameData\ItemViewBuilder;
 use App\Data\GameData\ItemCatalogSnapshot;
 use App\Models\GameDataCatalog;
-use App\Models\GameDataItem;
+use App\Models\GameItem;
+use App\Models\GameItemSource;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -15,15 +17,27 @@ final class ImportItemsService
 {
     public function __construct(
         private readonly ItemSnapshotReader $snapshots,
+        private readonly ItemViewBuilder $views,
         private readonly DatabaseManager $database,
     ) {}
 
-    /** @return array{source: string, ruleset: string, version: string, imported: int, deleted: int} */
+    /** @return array{source: string, ruleset: string, version: string, imported: int, deleted: int, views: int} */
     public function import(string $path): array
     {
-        $snapshot = $this->snapshots->read($path);
+        return $this->importMany([$path])[0];
+    }
 
-        return $this->database->transaction(fn (): array => $this->persist($snapshot));
+    /**
+     * @param  list<string>  $paths
+     * @return list<array{source: string, ruleset: string, version: string, imported: int, deleted: int, views: int}>
+     */
+    public function importMany(array $paths): array
+    {
+        $snapshots = array_map($this->snapshots->read(...), $paths);
+        $results = $this->database->transaction(fn (): array => array_map($this->persist(...), $snapshots));
+        $viewCount = $this->views->rebuildAll()['records'];
+
+        return array_map(fn (array $result): array => [...$result, 'views' => $viewCount], $results);
     }
 
     /** @return array{source: string, ruleset: string, version: string, imported: int, deleted: int} */
@@ -48,21 +62,26 @@ final class ImportItemsService
         $now = now();
 
         foreach (array_chunk($snapshot->items, 500, true) as $items) {
+            $this->persistItems(array_keys($items), $now);
+            $itemIds = GameItem::query()
+                ->whereIn('item_id', array_map('intval', array_keys($items)))
+                ->pluck('id', 'item_id');
             $rows = [];
             foreach ($items as $itemId => $item) {
-                $rows[] = $this->row($catalog->id, (string) $itemId, $item, $syncToken, $now);
+                $rows[] = $this->row($catalog->id, $itemIds[(int) $itemId], (string) $itemId, $item, $syncToken, $now);
             }
-            GameDataItem::query()->upsert(
+            GameItemSource::query()->upsert(
                 $rows,
-                ['game_data_catalog_id', 'item_id'],
+                ['game_data_catalog_id', 'game_item_id'],
                 ['name_zh_cn', 'name_en_us', 'aegis_name', 'item_type', 'resource_name', 'description', 'payload', 'sync_token', 'updated_at'],
             );
         }
 
-        $deleted = GameDataItem::query()
+        $deleted = GameItemSource::query()
             ->where('game_data_catalog_id', $catalog->id)
             ->where('sync_token', '!=', $syncToken)
             ->delete();
+        GameItem::query()->doesntHave('sources')->delete();
         $catalog->update([
             'content_hash' => $snapshot->contentHash,
             'record_count' => count($snapshot->items),
@@ -83,7 +102,7 @@ final class ImportItemsService
      * @param  array<string, mixed>  $item
      * @return array<string, mixed>
      */
-    private function row(int $catalogId, string $itemId, array $item, string $syncToken, mixed $now): array
+    private function row(int $catalogId, int $gameItemId, string $itemId, array $item, string $syncToken, mixed $now): array
     {
         if (! ctype_digit($itemId) || ! is_array($item['names'] ?? null)) {
             throw new RuntimeException("Invalid item snapshot entry: {$itemId}");
@@ -96,7 +115,7 @@ final class ImportItemsService
 
         return [
             'game_data_catalog_id' => $catalogId,
-            'item_id' => (int) $itemId,
+            'game_item_id' => $gameItemId,
             'name_zh_cn' => $chineseName,
             'name_en_us' => $englishName,
             'aegis_name' => is_string($item['AegisName'] ?? null) ? $item['AegisName'] : null,
@@ -108,6 +127,20 @@ final class ImportItemsService
             'created_at' => $now,
             'updated_at' => $now,
         ];
+    }
+
+    /** @param list<int|string> $itemIds */
+    private function persistItems(array $itemIds, mixed $now): void
+    {
+        GameItem::query()->upsert(
+            array_map(fn (int|string $itemId): array => [
+                'item_id' => (int) $itemId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ], $itemIds),
+            ['item_id'],
+            ['updated_at'],
+        );
     }
 
     private function json(mixed $value): ?string

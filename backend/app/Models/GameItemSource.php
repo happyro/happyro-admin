@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Database\Factories\GameDataItemFactory;
+use Database\Factories\GameItemSourceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class GameDataItem extends Model
+class GameItemSource extends Model
 {
-    /** @use HasFactory<GameDataItemFactory> */
+    /** @use HasFactory<GameItemSourceFactory> */
     use HasFactory;
 
     protected $fillable = [
+        'game_item_id',
         'game_data_catalog_id',
-        'item_id',
         'name_zh_cn',
         'name_en_us',
         'aegis_name',
@@ -25,6 +25,11 @@ class GameDataItem extends Model
         'sync_token',
     ];
 
+    public function item(): BelongsTo
+    {
+        return $this->belongsTo(GameItem::class, 'game_item_id');
+    }
+
     public function catalog(): BelongsTo
     {
         return $this->belongsTo(GameDataCatalog::class, 'game_data_catalog_id');
@@ -33,7 +38,6 @@ class GameDataItem extends Model
     protected function casts(): array
     {
         return [
-            'item_id' => 'integer',
             'description' => 'array',
             'payload' => 'array',
         ];

@@ -23,9 +23,9 @@ class GameDataCatalog extends Model
         'imported_at',
     ];
 
-    public function items(): HasMany
+    public function itemSources(): HasMany
     {
-        return $this->hasMany(GameDataItem::class);
+        return $this->hasMany(GameItemSource::class);
     }
 
     protected function casts(): array
