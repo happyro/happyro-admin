@@ -1,6 +1,8 @@
 {
   "version": 3,
+  "schema": "item-catalog/v2",
   "mode": "renewal",
+  "locales": ["zh-CN", "en-US"],
   "generated_at": "2026-09-01",
   "sources": [
     "repos/happyro-server/db/re/item_db.yml",
@@ -10,5 +12,5 @@
     "inputs/runtime/kro-20211105/client/System/itemInfo_true.lub"
   ],
   "local_files": ["renewal.json", "pre-renewal.json", "itemInfo_true.lub"],
-  "notes": "Server item rules are normalized into renewal.json. The client bytecode is stored locally for offline localized description extraction."
+  "notes": "Server item rules are normalized into bilingual snapshots. The client bytecode is stored locally for offline localized description extraction."
 }

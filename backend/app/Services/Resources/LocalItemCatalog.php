@@ -23,7 +23,11 @@ final class LocalItemCatalog implements ItemCatalog
     public function search(?string $query, ?string $type, int $page, int $perPage): array
     {
         $items = array_values(array_filter($this->items(), function (array $item) use ($query, $type): bool {
-            $matchesQuery = !$query || str_contains(strtolower((string) ($item['AegisName'] ?? '')), strtolower($query)) || str_contains((string) ($item['Name'] ?? ''), $query) || (string) ($item['Id'] ?? '') === $query;
+            $names = array_values(array_filter($item['names'] ?? [], 'is_string'));
+            $matchesQuery = !$query
+                || str_contains(strtolower((string) ($item['AegisName'] ?? '')), strtolower($query))
+                || (bool) array_filter($names, static fn (string $name): bool => str_contains($name, $query))
+                || (string) ($item['Id'] ?? '') === $query;
             return $matchesQuery && (!$type || ($item['Type'] ?? '') === $type);
         }));
         $total = count($items);

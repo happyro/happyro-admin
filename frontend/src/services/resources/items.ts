@@ -5,7 +5,7 @@ export type GameItem = {
   icon?: string;
   illustration?: string;
   AegisName?: string;
-  Name?: string;
+  names: Record<string, string>;
   Type?: string;
   SubType?: string | number;
   Buy?: number;
@@ -18,6 +18,10 @@ export type GameItem = {
   Script?: string;
   description?: string[];
 };
+
+export function itemName(item: GameItem, locale: string): string {
+  return item.names[locale] || item.names['en-US'] || Object.values(item.names)[0] || String(item.Id);
+}
 
 export async function listItems(params: Record<string, unknown>) {
   const { current, pageSize, ...filters } = params;

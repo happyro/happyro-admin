@@ -16,6 +16,8 @@ final class LocalItemCatalogTest extends TestCase
         $this->assertSame(1, $result['total']);
         $this->assertSame(670, $result['data'][0]['Id']);
         $this->assertSame('Gold_Coin_Moneybag', $result['data'][0]['AegisName']);
+        $this->assertSame('金币袋', $result['data'][0]['names']['zh-CN']);
+        $this->assertSame('Bag of Gold Coins', $result['data'][0]['names']['en-US']);
         $this->assertNotNull($catalog->iconPath(670));
     }
 
