@@ -1,7 +1,7 @@
 import { SendOutlined } from '@ant-design/icons';
 import { ModalForm } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { App, Button } from 'antd';
+import { App, Button, Image } from 'antd';
 import ItemGrantFormFields from '@/components/ItemGrantFormFields';
 import { mailItem } from '@/services/operations/item-grants';
 
@@ -22,9 +22,9 @@ export default function ItemGrantModal({ itemId, itemName }: Props) {
       title={intl.formatMessage(
         {
           id: 'operations.itemGrants.modalTitle',
-          defaultMessage: '发放物品：{name}',
+          defaultMessage: '发放物品：{name} · ID {id}',
         },
-        { name: itemName },
+        { name: itemName, id: itemId },
       )}
       trigger={
         <Button type="link" icon={<SendOutlined />}>
@@ -46,6 +46,24 @@ export default function ItemGrantModal({ itemId, itemName }: Props) {
         return true;
       }}
     >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          minHeight: 100,
+          marginBottom: 16,
+        }}
+      >
+        <Image
+          src={`/api/game-data/items/${itemId}/illustration`}
+          fallback={`/api/game-data/items/${itemId}/icon`}
+          alt={itemName}
+          width={75}
+          height={100}
+          preview
+          styles={{ image: { objectFit: 'contain' } }}
+        />
+      </div>
       <ItemGrantFormFields itemId={itemId} />
     </ModalForm>
   );

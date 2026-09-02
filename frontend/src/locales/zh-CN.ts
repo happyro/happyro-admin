@@ -11,7 +11,7 @@ export default {
   'gameData.item.script': '服务器脚本',
   'operations.itemGrants.title': '发放物品',
   'operations.itemGrants.action': '发放',
-  'operations.itemGrants.modalTitle': '发放物品：{name}',
+  'operations.itemGrants.modalTitle': '发放物品：{name} · ID {id}',
   'operations.itemGrants.success': '邮件已发送',
   'operations.itemGrants.item': '物品',
   'operations.itemGrants.itemPlaceholder': '输入物品 ID 或名称',

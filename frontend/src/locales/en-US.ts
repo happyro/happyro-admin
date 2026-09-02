@@ -11,7 +11,7 @@ export default {
   'gameData.item.script': 'Server script',
   'operations.itemGrants.title': 'Grant items',
   'operations.itemGrants.action': 'Grant',
-  'operations.itemGrants.modalTitle': 'Grant item: {name}',
+  'operations.itemGrants.modalTitle': 'Grant item: {name} · ID {id}',
   'operations.itemGrants.success': 'Mail sent',
   'operations.itemGrants.item': 'Item',
   'operations.itemGrants.itemPlaceholder': 'Enter an item ID or name',

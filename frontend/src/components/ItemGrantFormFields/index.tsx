@@ -14,6 +14,7 @@ import {
 
 type Props = {
   itemId?: number;
+  onItemChange?: (itemId?: number) => void;
 };
 
 type SelectOption = {
@@ -59,7 +60,7 @@ function useRemoteOptions(loader: (target: string) => Promise<SelectOption[]>) {
   return { loading, options, search };
 }
 
-export default function ItemGrantFormFields({ itemId }: Props) {
+export default function ItemGrantFormFields({ itemId, onItemChange }: Props) {
   const intl = useIntl();
   const t = (id: string, fallback: string) =>
     intl.formatMessage({ id, defaultMessage: fallback });
@@ -97,6 +98,7 @@ export default function ItemGrantFormFields({ itemId }: Props) {
             filterOption={false}
             loading={itemOptions.loading}
             onSearch={itemOptions.search}
+            onChange={onItemChange}
             options={itemOptions.options}
             placeholder={t(
               'operations.itemGrants.itemPlaceholder',
@@ -105,14 +107,14 @@ export default function ItemGrantFormFields({ itemId }: Props) {
           />
         </ProForm.Item>
       ) : (
-        <ProFormDigit
+        <ProForm.Item
           name="item_id"
-          label={t('gameData.item.id', '物品 ID')}
-          min={1}
           initialValue={itemId}
-          fieldProps={{ precision: 0, readOnly: true }}
+          hidden
           rules={[{ required: true }]}
-        />
+        >
+          <input type="hidden" />
+        </ProForm.Item>
       )}
       <ProForm.Item
         name="char_id"
