@@ -377,9 +377,9 @@
     },
     "566": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "567": {
       "resourceName": "새우",
@@ -479,15 +479,15 @@
     },
     "583": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "584": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "585": {
       "resourceName": "부르스티",
@@ -509,9 +509,9 @@
     },
     "588": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "589": {
       "resourceName": "피자",
@@ -64409,9 +64409,9 @@
     },
     "23367": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "23368": {
       "resourceName": "투명판04",
@@ -82625,9 +82625,9 @@
     },
     "100832": {
       "resourceName": "똠양꿍",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/c양꿍.bmp",
+      "illustration": "texture/유저인터페이스/collection/c양꿍.bmp",
+      "status": "complete"
     },
     "100833": {
       "resourceName": "어질요리02",
@@ -90887,9 +90887,9 @@
     },
     "480000": {
       "resourceName": "웤웤망토",
-      "icon": null,
-      "illustration": null,
-      "status": "asset_missing"
+      "icon": "texture/유저인터페이스/item/pp망토.bmp",
+      "illustration": "texture/유저인터페이스/collection/pp망토.bmp",
+      "status": "complete"
     },
     "480001": {
       "resourceName": "샤렐망토",

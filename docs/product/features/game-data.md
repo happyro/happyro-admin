@@ -102,7 +102,7 @@
 - 产物统一写入 `backend/resources/game-data/items/`，生成完成后再由 Laravel 导入命令同步至 MariaDB。
 - 服务端工具负责读取 rAthena 数据并生成 Renewal 快照；默认使用服务端英文基线 `2fe6ab3dc4d8`，禁止从已翻译的服务端文件猜测英文名称。
 - 仅客户端工具读取 kRO merged 的 `itemInfo_true.json`，用 Renewal 快照中的 `en-US` 名称补齐英文；生成前要求客户端 ID 全部命中服务端快照。
-- 资源路径必须以 GRF 解压 `manifest.json` 为准：先精确匹配，再进行 Unicode NFC 和不区分大小写匹配，将磁盘真实相对路径写入 `item-assets.json`。禁止在 Laravel 请求期间扫描目录或猜测文件名。
+- 资源路径必须以 GRF 解压 `manifest.json` 为准：先精确匹配，再进行 Unicode NFC、不区分大小写和 CP949 乱码恢复匹配，将磁盘真实相对路径写入 `item-assets.json`。禁止在 Laravel 请求期间扫描目录或猜测文件名。
 - 两条生成流水线共用通用游戏资料构建工程，但客户端和服务端的领域规则互相隔离；完整结构、参数和测试命令见根仓库 `tools/resources/README.md`。
 
 ## 验收记录
