@@ -13,7 +13,7 @@
 ## 数据来源
 
 - 服务器属性来自 HappyRO Server `db/re/item_db_*.yml`。
-- 客户端 `itemInfo_true.lub` 是 Lua 5.1 字节码，已冗余保存在本地资源目录；说明和资源名通过离线快照写入 `descriptions.json`、`icon-map.json`。
+- 客户端 `itemInfo_true.json` 是从 Lua 5.1 字节码离线提取的规范化快照；说明和资源名通过离线索引写入 `descriptions.json`、`icon-map.json`。
 - 原始 kRO 资源来自 `inputs/runtime/kro-20211105/client/data.grf`，全量解压结果位于被 Git 忽略的 `work/grf-extract/kro-20211105/data/`。
 - 解压清单 `manifest.json` 保存原始路径、规范化路径、文件大小和 SHA-256；提取工具位于 `repos/happyro-gateway/tools/extract-grf.mjs`。
 - 管理后台通过可配置的 `GAME_RESOURCE_ROOT` 读取本地资源，默认指向上述解压目录，不把大体积 GRF 或全量解压文件提交到 Git。
@@ -29,7 +29,7 @@
 ## 版本模型
 
 - `客户端资源` 与 `服务端版本` 是两个独立的选择项，不合并为一个版本号。
-- 客户端资源当前固定为 `kRO 2021-11-05`（内部目录 `kro-20211105`），决定 `itemInfo_true.lub`、`data.grf`、图片和客户端说明的来源。
+- 客户端资源当前固定为 `kRO 2021-11-05`（内部目录 `kro-20211105`），决定 `itemInfo_true.json`、`data.grf`、图片和客户端说明的来源。
 - 服务端版本来自 HappyRO Server 的 rAthena 数据快照，当前仓库快照为 `251fa0ff`（2026-08-28）；界面显示短 hash 和日期，完整 hash 保存在资源索引元数据中。
 - 图鉴查询请求应同时携带两个版本选择，例如：`客户端资源 [kRO 2021-11-05]`、`服务端版本 [rAthena 251fa0ff · 2026-08-28]`。
 
@@ -37,7 +37,7 @@
 
 图鉴提供三个互斥的数据范围选项，内部值固定为 `client`、`server`、`all`：
 
-- `仅客户端`：只显示客户端 `itemInfo_true.lub` 快照中的物品 ID；这不是扫描 GRF 中所有图片文件。
+- `仅客户端`：只显示客户端 `itemInfo_true.json` 快照中的物品 ID；这不是扫描 GRF 中所有图片文件。
 - `仅服务端`：只显示 rAthena `item_db_*.yml` 中的物品 ID。
 - `全部`：按物品 ID 对客户端和服务端集合取并集。
 
@@ -74,7 +74,7 @@
 ## 快照生成
 
 - 使用根仓库 `tools/resources/item_catalog/main.py server` 生成后台本地服务端物品快照。
-- 使用根仓库 `tools/resources/item_catalog/main.py client` 生成仅客户端快照 `backend/resources/game/items/client-kro-20211105.json`。
+- 使用根仓库 `tools/resources/item_catalog/main.py client` 一次生成仅客户端快照、图标映射和说明索引。
 - 服务端工具负责读取 rAthena 数据并生成 Renewal 快照；默认使用服务端英文基线 `2fe6ab3dc4d8`，禁止从已翻译的服务端文件猜测英文名称。
 - 仅客户端工具读取 kRO merged 的 `itemInfo_true.json`，用 Renewal 快照中的 `en-US` 名称补齐英文；生成前要求客户端 ID 全部命中服务端快照。
 - 两条生成流水线共用分层工程，但客户端和服务端的领域规则互相隔离；完整结构、参数和测试命令见根仓库 `tools/resources/README.md`。
