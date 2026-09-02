@@ -8,23 +8,27 @@ use App\Contracts\Auth\LoginThrottle;
 use App\Contracts\Auth\PermissionChecker;
 use App\Contracts\Auth\UserProvisioner;
 use App\Contracts\Auth\UserRepository;
+use App\Contracts\GameData\ItemAssetRepository;
+use App\Contracts\GameData\ItemRepository;
+use App\Contracts\GameData\ItemSnapshotReader;
+use App\Contracts\Operations\ItemGrantRepository;
 use App\Contracts\Players\LoginLogRepository;
 use App\Contracts\Players\PlayerAccountRepository;
 use App\Contracts\Players\PlayerCharacterRepository;
-use App\Contracts\Resources\ItemCatalog;
-use App\Contracts\Resources\ItemGrantRepository;
 use App\Services\Audit\EloquentAuditWriter;
 use App\Services\Auth\EloquentPermissionChecker;
 use App\Services\Auth\EloquentUserProvisioner;
 use App\Services\Auth\EloquentUserRepository;
 use App\Services\Auth\RateLimiterLoginThrottle;
 use App\Services\Auth\SessionAuthenticationService;
+use App\Services\GameData\DatabaseItemRepository;
+use App\Services\GameData\JsonItemSnapshotReader;
+use App\Services\GameData\LocalItemAssetRepository;
+use App\Services\Operations\DatabaseItemGrantRepository;
+use App\Services\Operations\ItemGrantService;
 use App\Services\Players\DatabaseLoginLogRepository;
 use App\Services\Players\DatabasePlayerAccountRepository;
 use App\Services\Players\DatabasePlayerCharacterRepository;
-use App\Services\Resources\LocalItemCatalog;
-use App\Services\Resources\DatabaseItemGrantRepository;
-use App\Services\Resources\ItemGrantService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,14 +46,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PermissionChecker::class, EloquentPermissionChecker::class);
         $this->app->bind(PlayerAccountRepository::class, DatabasePlayerAccountRepository::class);
         $this->app->bind(PlayerCharacterRepository::class, DatabasePlayerCharacterRepository::class);
-        $this->app->bind(ItemCatalog::class, function ($app) {
-            return new LocalItemCatalog(
-                config('happyro.resources.item_catalog'),
-                config('happyro.resources.item_icon_map'),
-                config('happyro.resources.item_descriptions'),
-                config('happyro.resources.grf_root'),
-                config('happyro.resources.item_icon_relative_root'),
-                config('happyro.resources.item_illustration_relative_root'),
+        $this->app->bind(ItemRepository::class, DatabaseItemRepository::class);
+        $this->app->bind(ItemSnapshotReader::class, JsonItemSnapshotReader::class);
+        $this->app->bind(ItemAssetRepository::class, function ($app) {
+            return new LocalItemAssetRepository(
+                config('happyro.game_data.item_icon_map'),
+                config('happyro.game_data.grf_root'),
+                config('happyro.game_data.item_icon_relative_root'),
+                config('happyro.game_data.item_illustration_relative_root'),
             );
         });
         $this->app->bind(ItemGrantRepository::class, DatabaseItemGrantRepository::class);

@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\GameData\ItemController;
+use App\Http\Controllers\Operations\ItemGrantController;
 use App\Http\Controllers\Players\LoginLogController;
 use App\Http\Controllers\Players\PlayerAccountController;
 use App\Http\Controllers\Players\PlayerCharacterController;
-use App\Http\Controllers\Resources\ItemController;
-use App\Http\Controllers\Resources\ItemGrantController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,10 +32,14 @@ Route::prefix('api/players')->middleware(['auth:sanctum', 'permission:players.vi
     Route::delete('/accounts/{accountId}', [PlayerAccountController::class, 'destroy'])->middleware('permission:players.edit');
 });
 
-Route::prefix('api/resources')->middleware(['auth:sanctum', 'permission:players.view'])->group(function () {
+Route::prefix('api/game-data')->middleware(['auth:sanctum', 'permission:game-data.view'])->group(function () {
     Route::get('/items', [ItemController::class, 'index']);
-    Route::get('/items/{id}', [ItemController::class, 'show']);
-    Route::get('/items/{id}/icon', [ItemController::class, 'icon']);
-    Route::get('/items/{id}/illustration', [ItemController::class, 'illustration']);
-    Route::post('/item-grants/mail', [ItemGrantController::class, 'store'])->middleware('permission:players.edit');
+    Route::get('/items/versions', [ItemController::class, 'versions']);
+    Route::get('/items/{itemId}', [ItemController::class, 'show'])->whereNumber('itemId');
+    Route::get('/items/{itemId}/icon', [ItemController::class, 'icon'])->whereNumber('itemId');
+    Route::get('/items/{itemId}/illustration', [ItemController::class, 'illustration'])->whereNumber('itemId');
+});
+
+Route::prefix('api/operations')->middleware(['auth:sanctum', 'permission:operations.item-grant'])->group(function () {
+    Route::post('/item-grants/mail', [ItemGrantController::class, 'store']);
 });

@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | 管理员登录 | 已完成 | - |
 | 用户管理 | 开发中 | [用户管理](features/user-management.md) |
-| 游戏资源 | 开发中 | [游戏资源](features/game-resources.md) |
+| 游戏资料 | 开发中 | [游戏资料](features/game-data.md) |
 
 ## 下一步
 
