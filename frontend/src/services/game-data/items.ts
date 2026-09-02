@@ -27,6 +27,7 @@ export type ItemDataRange = 'client' | 'server' | 'all';
 export type ItemQuery = {
   query?: string;
   type?: string;
+  subtype?: string;
   range?: ItemDataRange;
   clientVersion?: string;
   serverVersion?: string;

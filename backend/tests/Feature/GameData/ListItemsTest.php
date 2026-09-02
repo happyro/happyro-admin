@@ -26,7 +26,7 @@ final class ListItemsTest extends TestCase
             'description' => ['恢复 HP'],
         ]);
         $this->source($client, 502, ['name_zh_cn' => '客户端橙药', 'name_en_us' => 'Orange Potion']);
-        $this->source($server, 501, ['name_zh_cn' => '服务端红药', 'name_en_us' => 'Red Potion', 'aegis_name' => 'Red_Potion', 'item_type' => 'Healing', 'payload' => ['Weight' => 70]]);
+        $this->source($server, 501, ['name_zh_cn' => '服务端红药', 'name_en_us' => 'Red Potion', 'aegis_name' => 'Red_Potion', 'item_type' => 'Weapon', 'item_subtype' => '1hSword', 'payload' => ['Weight' => 70, 'SubType' => '1hSword']]);
         $this->source($server, 503, ['name_zh_cn' => '服务端黄药', 'name_en_us' => 'Yellow Potion', 'item_type' => 'Healing']);
         app(ItemViewBuilder::class)->rebuildAll();
         $this->withoutAssets();
@@ -42,13 +42,14 @@ final class ListItemsTest extends TestCase
             ->assertJsonPath('data.0.names.zh-CN', '客户端红药')
             ->assertJsonPath('data.0.description.0', '恢复 HP');
 
-        $this->getJson("/api/game-data/items?range=client&{$versions}&type=Healing")
+        $this->getJson("/api/game-data/items?range=client&{$versions}&type=Weapon&subtype=1hSword")
             ->assertOk()
             ->assertJsonPath('total', 1)
             ->assertJsonPath('data.0.Id', 501)
             ->assertJsonPath('data.0.AegisName', 'Red_Potion')
             ->assertJsonPath('data.0.Weight', 70)
-            ->assertJsonPath('data.0.Type', 'Healing');
+            ->assertJsonPath('data.0.Type', 'Weapon')
+            ->assertJsonPath('data.0.SubType', '1hSword');
     }
 
     public function test_item_api_filters_across_merged_sources(): void

@@ -19,6 +19,7 @@ class GameItemSource extends Model
         'name_en_us',
         'aegis_name',
         'item_type',
+        'item_subtype',
         'resource_name',
         'description',
         'payload',

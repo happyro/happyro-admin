@@ -96,6 +96,7 @@ final class DatabaseItemViewBuilder implements ItemViewBuilder
             'name_en_us' => $client?->name_en_us ?? $server?->name_en_us ?? '',
             'aegis_name' => $server?->aegis_name,
             'item_type' => $server?->item_type,
+            'item_subtype' => $server?->item_subtype,
             'resource_name' => $client?->resource_name,
             'description' => $this->json($client?->description),
             'buy' => $this->integer($serverPayload['Buy'] ?? null),
@@ -120,6 +121,7 @@ final class DatabaseItemViewBuilder implements ItemViewBuilder
             'resourceName' => $client?->resource_name ? 'client' : null,
             'AegisName' => $server?->aegis_name ? 'server' : null,
             'Type' => $server?->item_type ? 'server' : null,
+            'SubType' => $server?->item_subtype ? 'server' : null,
         ];
         foreach (['Buy', 'Sell', 'Weight', 'Attack', 'Defense', 'Slots', 'Script'] as $field) {
             $sources[$field] = array_key_exists($field, $serverPayload) ? 'server' : null;

@@ -19,6 +19,7 @@ class GameItemSourceFactory extends Factory
             'name_en_us' => fake()->words(2, true),
             'aegis_name' => fake()->unique()->regexify('[A-Z][A-Za-z_]{12}'),
             'item_type' => 'Etc',
+            'item_subtype' => null,
             'resource_name' => null,
             'description' => null,
             'payload' => [],

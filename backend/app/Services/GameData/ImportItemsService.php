@@ -73,7 +73,7 @@ final class ImportItemsService
             GameItemSource::query()->upsert(
                 $rows,
                 ['game_data_catalog_id', 'game_item_id'],
-                ['name_zh_cn', 'name_en_us', 'aegis_name', 'item_type', 'resource_name', 'description', 'payload', 'sync_token', 'updated_at'],
+                ['name_zh_cn', 'name_en_us', 'aegis_name', 'item_type', 'item_subtype', 'resource_name', 'description', 'payload', 'sync_token', 'updated_at'],
             );
         }
 
@@ -120,6 +120,7 @@ final class ImportItemsService
             'name_en_us' => $englishName,
             'aegis_name' => is_string($item['AegisName'] ?? null) ? $item['AegisName'] : null,
             'item_type' => is_string($item['Type'] ?? null) ? $item['Type'] : null,
+            'item_subtype' => is_string($item['SubType'] ?? null) ? $item['SubType'] : null,
             'resource_name' => is_string($item['identifiedResourceName'] ?? null) ? $item['identifiedResourceName'] : null,
             'description' => $this->json($this->description($item['identifiedDescriptionName'] ?? null)),
             'payload' => $this->json(Arr::except($item, ['names', 'identifiedResourceName', 'identifiedDescriptionName'])),

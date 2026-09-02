@@ -17,6 +17,7 @@ final class ItemGrantItemService
         $result = $this->items->search(new ItemQuery(
             $target,
             null,
+            null,
             'server',
             (string) config('happyro.game_data.default_client_version'),
             (string) config('happyro.game_data.default_server_version'),

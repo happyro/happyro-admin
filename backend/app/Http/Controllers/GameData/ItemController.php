@@ -23,6 +23,7 @@ final class ItemController
         $result = $this->items->search(new ItemQuery(
             $data['query'] ?? null,
             $data['type'] ?? null,
+            $data['subtype'] ?? null,
             $data['range'] ?? 'client',
             $data['clientVersion'] ?? config('happyro.game_data.default_client_version'),
             $data['serverVersion'] ?? config('happyro.game_data.default_server_version'),

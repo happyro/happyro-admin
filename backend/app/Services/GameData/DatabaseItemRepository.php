@@ -14,7 +14,8 @@ final class DatabaseItemRepository implements ItemRepository
     {
         $builder = $this->query($query->clientVersion, $query->serverVersion, $query->range)
             ->when($query->query, fn (Builder $items, string $value): Builder => $this->matching($items, $value))
-            ->when($query->type, fn (Builder $items, string $value): Builder => $items->where('item_type', $value));
+            ->when($query->type, fn (Builder $items, string $value): Builder => $items->where('item_type', $value))
+            ->when($query->subtype, fn (Builder $items, string $value): Builder => $items->where('item_subtype', $value));
         $total = (clone $builder)->count();
         $records = $builder
             ->with($this->relations())
@@ -105,6 +106,7 @@ final class DatabaseItemRepository implements ItemRepository
             ...$view->payload,
             'AegisName' => $view->aegis_name,
             'Type' => $view->item_type,
+            'SubType' => $view->item_subtype,
             'Buy' => $view->buy,
             'Sell' => $view->sell,
             'Weight' => $view->weight,

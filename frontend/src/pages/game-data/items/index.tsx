@@ -9,6 +9,7 @@ import { useAccess, useIntl } from '@umijs/max';
 import { App, Button, Descriptions, Drawer, Tag } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ItemGrantModal from '@/components/ItemGrantModal';
+import { ITEM_TYPE_CODES, WEAPON_SUBTYPE_CODES } from '@/data/game/item-types';
 import {
   type GameDataItem,
   getItem,
@@ -21,23 +22,20 @@ import {
 type Versions = { client: string[]; server: string[] };
 type Translate = (id: string, fallback: string) => string;
 
-const ITEM_TYPES = [
-  'Healing',
-  'Usable',
-  'DelayConsume',
-  'Etc',
-  'Armor',
-  'Weapon',
-  'Card',
-  'PetEgg',
-  'PetArmor',
-  'Ammo',
-  'ShadowGear',
-  'Cash',
-];
-
 function itemTypeLabel(type: string | undefined, t: Translate): string {
   return type ? t(`gameData.item.type.${type.toLowerCase()}`, type) : '-';
+}
+
+function weaponSubtypeLabel(
+  subtype: string | number | undefined,
+  t: Translate,
+): string {
+  return subtype
+    ? t(
+        `gameData.item.weaponSubtype.${String(subtype).toLowerCase()}`,
+        String(subtype),
+      )
+    : '-';
 }
 
 function sourceLabel(source: GameDataItem['source'], t: Translate): string {
@@ -50,6 +48,7 @@ export default function Items() {
   const { message } = App.useApp();
   const formRef = useRef<ProFormInstance | undefined>(undefined);
   const [detail, setDetail] = useState<GameDataItem>();
+  const [selectedItemType, setSelectedItemType] = useState<string>();
   const [versions, setVersions] = useState<Versions>({
     client: [],
     server: [],
@@ -126,10 +125,25 @@ export default function Items() {
         title: t('gameData.item.type', '类型'),
         dataIndex: 'type',
         valueEnum: Object.fromEntries(
-          ITEM_TYPES.map((type) => [type, itemTypeLabel(type, t)]),
+          ITEM_TYPE_CODES.map((type) => [type, itemTypeLabel(type, t)]),
         ),
         render: (_, row) => itemTypeLabel(row.Type, t),
       },
+      ...(selectedItemType === 'Weapon'
+        ? [
+            {
+              title: t('gameData.item.weaponSubtype', '武器类型'),
+              dataIndex: 'subtype',
+              hideInTable: true,
+              valueEnum: Object.fromEntries(
+                WEAPON_SUBTYPE_CODES.map((subtype) => [
+                  subtype,
+                  weaponSubtypeLabel(subtype, t),
+                ]),
+              ),
+            },
+          ]
+        : []),
       {
         title: t('gameData.item.weight', '重量'),
         dataIndex: 'Weight',
@@ -187,7 +201,7 @@ export default function Items() {
         ),
       },
     ],
-    [access.canGrantItems, intl.locale, versions],
+    [access.canGrantItems, intl.locale, selectedItemType, versions],
   );
 
   return (
@@ -197,6 +211,16 @@ export default function Items() {
         rowKey="Id"
         columns={columns}
         search={{ defaultCollapsed: false }}
+        form={{
+          onValuesChange: (changedValues) => {
+            if ('type' in changedValues) {
+              setSelectedItemType(changedValues.type);
+              if (changedValues.type !== 'Weapon') {
+                formRef.current?.setFieldValue('subtype', undefined);
+              }
+            }
+          },
+        }}
         request={async (params) => {
           const result = await listItems(params);
           return { data: result.data, total: result.total, success: true };
@@ -253,6 +277,13 @@ function ItemDetails({
         <Descriptions.Item label={t('gameData.item.type', '类型')}>
           <Tag>{itemTypeLabel(item.Type, t)}</Tag>
         </Descriptions.Item>
+        {item.SubType && (
+          <Descriptions.Item
+            label={t('gameData.item.weaponSubtype', '武器类型')}
+          >
+            <Tag>{weaponSubtypeLabel(item.SubType, t)}</Tag>
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label={t('gameData.item.source', '数据来源')}>
           <Tag>{sourceLabel(item.source, t)}</Tag>
         </Descriptions.Item>
