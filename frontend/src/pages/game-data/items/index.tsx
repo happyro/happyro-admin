@@ -6,8 +6,8 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import { useAccess, useIntl } from '@umijs/max';
-import { App, Button, Descriptions, Drawer, Tag } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Descriptions, Drawer, Tag } from 'antd';
+import { useMemo, useRef, useState } from 'react';
 import ItemGrantModal from '@/components/ItemGrantModal';
 import { ITEM_TYPE_CODES, WEAPON_SUBTYPE_CODES } from '@/data/game/item-types';
 import {
@@ -16,10 +16,8 @@ import {
   type ItemQuery,
   itemName,
   listItems,
-  listItemVersions,
 } from '@/services/game-data/items';
 
-type Versions = { client: string[]; server: string[] };
 type Translate = (id: string, fallback: string) => string;
 
 function itemTypeLabel(type: string | undefined, t: Translate): string {
@@ -45,36 +43,12 @@ function sourceLabel(source: GameDataItem['source'], t: Translate): string {
 export default function Items() {
   const intl = useIntl();
   const access = useAccess();
-  const { message } = App.useApp();
   const formRef = useRef<ProFormInstance | undefined>(undefined);
   const [detail, setDetail] = useState<GameDataItem>();
   const [selectedItemType, setSelectedItemType] = useState<string>();
-  const [versions, setVersions] = useState<Versions>({
-    client: [],
-    server: [],
-  });
   const t = (id: string, fallback: string) =>
     intl.formatMessage({ id, defaultMessage: fallback });
   const locale = intl.locale;
-
-  useEffect(() => {
-    listItemVersions()
-      .then(({ data }) => {
-        setVersions(data);
-        formRef.current?.setFieldsValue({
-          clientVersion: data.client[0],
-          serverVersion: data.server[0],
-        });
-      })
-      .catch(() =>
-        message.error(
-          intl.formatMessage({
-            id: 'app.error.chunk.description.online',
-            defaultMessage: '页面资料加载失败，请重新加载重试。',
-          }),
-        ),
-      );
-  }, []);
 
   const columns = useMemo<ProColumns<GameDataItem>[]>(
     () => [
@@ -161,22 +135,6 @@ export default function Items() {
         },
       },
       {
-        title: t('gameData.item.clientVersion', '客户端资源'),
-        dataIndex: 'clientVersion',
-        hideInTable: true,
-        valueEnum: Object.fromEntries(
-          versions.client.map((version) => [version, version]),
-        ),
-      },
-      {
-        title: t('gameData.item.serverVersion', '服务端版本'),
-        dataIndex: 'serverVersion',
-        hideInTable: true,
-        valueEnum: Object.fromEntries(
-          versions.server.map((version) => [version, version.slice(0, 10)]),
-        ),
-      },
-      {
         title: t('common.actions', '操作'),
         valueType: 'option',
         render: (_, row) => (
@@ -201,7 +159,7 @@ export default function Items() {
         ),
       },
     ],
-    [access.canGrantItems, intl.locale, selectedItemType, versions],
+    [access.canGrantItems, intl.locale, selectedItemType],
   );
 
   return (

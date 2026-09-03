@@ -11,5 +11,7 @@ export default function access(
     canGrantItems:
       permissions.includes('*') ||
       permissions.includes('operations.item-grant'),
+    canManageSettings:
+      permissions.includes('*') || permissions.includes('settings.manage'),
   };
 }

@@ -41,12 +41,6 @@ export async function listMonsters(params: Record<string, unknown>) {
   );
 }
 
-export async function getMonster(id: number, serverVersion?: string) {
-  return request<{ data: GameDataMonster }>(`/api/game-data/monsters/${id}`, {
-    params: { serverVersion },
-  });
-}
-
-export async function listMonsterVersions() {
-  return request<{ data: string[] }>('/api/game-data/monsters/versions');
+export async function getMonster(id: number) {
+  return request<{ data: GameDataMonster }>(`/api/game-data/monsters/${id}`);
 }

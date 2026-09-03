@@ -9,8 +9,6 @@ final readonly class ItemQuery
         public ?string $type,
         public ?string $subtype,
         public string $range,
-        public string $clientVersion,
-        public string $serverVersion,
         public int $page,
         public int $perPage,
     ) {}

@@ -28,8 +28,6 @@ class ListItemsRequest extends FormRequest
             'type' => ['nullable', 'string', 'max:32'],
             'subtype' => ['nullable', 'string', 'max:32'],
             'range' => ['nullable', Rule::in(['client', 'server', 'all'])],
-            'clientVersion' => ['nullable', 'string', 'max:64'],
-            'serverVersion' => ['nullable', 'string', 'max:64'],
             'page' => ['nullable', 'integer', 'min:1'],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];

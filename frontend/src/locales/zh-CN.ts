@@ -7,6 +7,10 @@ import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
 
 export default {
+  'settings.gameData.title': '游戏资料',
+  'settings.gameData.loadFailed': '游戏资料设置加载失败',
+  'settings.gameData.saved': '游戏资料设置已保存',
+  'common.save': '保存',
   'gameData.monsters.title': '魔物图鉴',
   'gameData.monster.image': '形象',
   'gameData.monster.id': '魔物 ID',

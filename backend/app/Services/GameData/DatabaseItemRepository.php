@@ -2,6 +2,7 @@
 
 namespace App\Services\GameData;
 
+use App\Contracts\GameData\GameDataSettingRepository;
 use App\Contracts\GameData\ItemRepository;
 use App\Data\GameData\ItemQuery;
 use App\Models\GameDataCatalog;
@@ -10,9 +11,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class DatabaseItemRepository implements ItemRepository
 {
+    public function __construct(private readonly GameDataSettingRepository $settings) {}
+
     public function search(ItemQuery $query): array
     {
-        $builder = $this->query($query->clientVersion, $query->serverVersion, $query->range)
+        $builder = $this->query($query->range)
             ->when($query->query, fn (Builder $items, string $value): Builder => $this->matching($items, $value))
             ->when($query->type, fn (Builder $items, string $value): Builder => $items->where('item_type', $value))
             ->when($query->subtype, fn (Builder $items, string $value): Builder => $items->where('item_subtype', $value));
@@ -26,9 +29,9 @@ final class DatabaseItemRepository implements ItemRepository
         return ['data' => $records->map($this->payload(...))->all(), 'total' => $total];
     }
 
-    public function find(int $itemId, string $range, string $clientVersion, string $serverVersion): ?array
+    public function find(int $itemId, string $range): ?array
     {
-        $record = $this->query($clientVersion, $serverVersion, $range)
+        $record = $this->query($range)
             ->with($this->relations())
             ->where('item_id', $itemId)
             ->first();
@@ -36,27 +39,11 @@ final class DatabaseItemRepository implements ItemRepository
         return $record ? $this->payload($record) : null;
     }
 
-    public function versions(): array
+    private function query(string $range): Builder
     {
-        $catalogs = GameDataCatalog::query()
-            ->where('resource_type', 'items')
-            ->where(fn (Builder $query): Builder => $query
-                ->where(fn (Builder $client): Builder => $client->where('source', 'client')->where('ruleset', 'client'))
-                ->orWhere(fn (Builder $server): Builder => $server->where('source', 'server')->where('ruleset', 'renewal')))
-            ->orderByDesc('imported_at')
-            ->get(['source', 'source_version'])
-            ->groupBy('source');
-
-        return [
-            'client' => $catalogs->get('client', collect())->pluck('source_version')->unique()->values()->all(),
-            'server' => $catalogs->get('server', collect())->pluck('source_version')->unique()->values()->all(),
-        ];
-    }
-
-    private function query(string $clientVersion, string $serverVersion, string $range): Builder
-    {
-        $clientCatalog = $this->catalogId('client', 'client', $clientVersion);
-        $serverCatalog = $this->catalogId('server', 'renewal', $serverVersion);
+        $versions = $this->settings->current();
+        $clientCatalog = $this->catalogId('client', 'client', $versions->client);
+        $serverCatalog = $this->catalogId('server', 'renewal', $versions->server);
 
         return GameItemView::query()
             ->where('client_catalog_id', $clientCatalog ?? 0)

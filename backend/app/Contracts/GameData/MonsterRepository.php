@@ -10,8 +10,5 @@ interface MonsterRepository
     public function search(MonsterQuery $query): array;
 
     /** @return array<string, mixed>|null */
-    public function find(int $monsterId, string $version): ?array;
-
-    /** @return list<string> */
-    public function versions(): array;
+    public function find(int $monsterId): ?array;
 }

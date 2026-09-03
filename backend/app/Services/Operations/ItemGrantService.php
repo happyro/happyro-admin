@@ -19,8 +19,6 @@ final class ItemGrantService
         if (! $this->items->find(
             (int) $data['item_id'],
             'server',
-            (string) config('happyro.game_data.default_client_version'),
-            (string) config('happyro.game_data.default_server_version'),
         )) {
             throw new ItemNotFoundException((int) $data['item_id']);
         }

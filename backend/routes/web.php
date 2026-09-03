@@ -9,6 +9,7 @@ use App\Http\Controllers\Operations\ItemGrantTargetController;
 use App\Http\Controllers\Players\LoginLogController;
 use App\Http\Controllers\Players\PlayerAccountController;
 use App\Http\Controllers\Players\PlayerCharacterController;
+use App\Http\Controllers\Settings\GameDataSettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,14 +38,17 @@ Route::prefix('api/players')->middleware(['auth:sanctum', 'permission:players.vi
 
 Route::prefix('api/game-data')->middleware(['auth:sanctum', 'permission:game-data.view'])->group(function () {
     Route::get('/items', [ItemController::class, 'index']);
-    Route::get('/items/versions', [ItemController::class, 'versions']);
     Route::get('/items/{itemId}', [ItemController::class, 'show'])->whereNumber('itemId');
     Route::get('/items/{itemId}/icon', [ItemController::class, 'icon'])->whereNumber('itemId');
     Route::get('/items/{itemId}/illustration', [ItemController::class, 'illustration'])->whereNumber('itemId');
     Route::get('/monsters', [MonsterController::class, 'index']);
-    Route::get('/monsters/versions', [MonsterController::class, 'versions']);
     Route::get('/monsters/{monsterId}', [MonsterController::class, 'show'])->whereNumber('monsterId');
     Route::get('/monsters/{monsterId}/image', [MonsterController::class, 'image'])->whereNumber('monsterId');
+});
+
+Route::prefix('api/settings')->middleware(['auth:sanctum', 'permission:settings.manage'])->group(function () {
+    Route::get('/game-data', [GameDataSettingController::class, 'show']);
+    Route::put('/game-data', [GameDataSettingController::class, 'update']);
 });
 
 Route::prefix('api/operations')->middleware(['auth:sanctum', 'permission:operations.item-grant'])->group(function () {

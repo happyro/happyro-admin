@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests\GameData;
+namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ShowMonsterRequest extends FormRequest
+class UpdateGameDataSettingRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,7 +23,8 @@ class ShowMonsterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'serverVersion' => ['nullable', 'string', 'max:64'],
+            'clientVersion' => ['required', 'string', 'max:64'],
+            'serverVersion' => ['required', 'string', 'max:64'],
         ];
     }
 }

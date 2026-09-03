@@ -10,7 +10,6 @@ final readonly class MonsterQuery
         public ?string $element,
         public ?string $size,
         public ?bool $boss,
-        public string $version,
         public int $page,
         public int $perPage,
     ) {}

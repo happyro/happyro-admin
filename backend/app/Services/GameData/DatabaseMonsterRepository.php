@@ -2,6 +2,7 @@
 
 namespace App\Services\GameData;
 
+use App\Contracts\GameData\GameDataSettingRepository;
 use App\Contracts\GameData\MonsterRepository;
 use App\Data\GameData\MonsterQuery;
 use App\Models\GameDataCatalog;
@@ -10,9 +11,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class DatabaseMonsterRepository implements MonsterRepository
 {
+    public function __construct(private readonly GameDataSettingRepository $settings) {}
+
     public function search(MonsterQuery $query): array
     {
-        $builder = $this->query($query->version)
+        $builder = $this->query()
             ->when($query->query, fn (Builder $rows, string $value): Builder => $this->matching($rows, $value))
             ->when($query->race, fn (Builder $rows, string $value): Builder => $rows->where('race', $value))
             ->when($query->element, fn (Builder $rows, string $value): Builder => $rows->where('element', $value))
@@ -24,21 +27,16 @@ final class DatabaseMonsterRepository implements MonsterRepository
         return ['data' => $data->map($this->payload(...))->all(), 'total' => $total];
     }
 
-    public function find(int $monsterId, string $version): ?array
+    public function find(int $monsterId): ?array
     {
-        $monster = $this->query($version)->where('monster_id', $monsterId)->first();
+        $monster = $this->query()->where('monster_id', $monsterId)->first();
 
         return $monster ? $this->payload($monster) : null;
     }
 
-    public function versions(): array
+    private function query(): Builder
     {
-        return GameDataCatalog::query()->where('resource_type', 'monsters')->where('ruleset', 'renewal')
-            ->orderByDesc('imported_at')->pluck('source_version')->unique()->values()->all();
-    }
-
-    private function query(string $version): Builder
-    {
+        $version = $this->settings->current()->server;
         $catalogId = GameDataCatalog::query()->where('resource_type', 'monsters')
             ->where('source', 'server')->where('ruleset', 'renewal')
             ->where('source_version', $version)->value('id');

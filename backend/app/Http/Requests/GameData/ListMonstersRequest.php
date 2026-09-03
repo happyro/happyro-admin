@@ -28,7 +28,6 @@ class ListMonstersRequest extends FormRequest
             'element' => ['nullable', 'string', 'max:32'],
             'size' => ['nullable', Rule::in(['Small', 'Medium', 'Large'])],
             'boss' => ['nullable', 'boolean'],
-            'serverVersion' => ['nullable', 'string', 'max:64'],
             'page' => ['nullable', 'integer', 'min:1'],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];

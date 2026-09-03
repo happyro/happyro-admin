@@ -19,7 +19,7 @@ final class ItemGrantServiceTest extends TestCase
         $items = Mockery::mock(ItemRepository::class);
         $grants = Mockery::mock(ItemGrantRepository::class);
         $audit = Mockery::mock(AuditWriter::class);
-        $items->expects('find')->with(670, 'server', 'kro-20211105', '2fe6ab3dc4d8')->andReturn(['Id' => 670]);
+        $items->expects('find')->with(670, 'server')->andReturn(['Id' => 670]);
         $grants->expects('mail')->andReturn(12);
         $audit->expects('write');
 
@@ -31,7 +31,7 @@ final class ItemGrantServiceTest extends TestCase
     public function test_mail_grant_rejects_unknown_item_without_writing(): void
     {
         $items = Mockery::mock(ItemRepository::class);
-        $items->expects('find')->with(999, 'server', 'kro-20211105', '2fe6ab3dc4d8')->andReturnNull();
+        $items->expects('find')->with(999, 'server')->andReturnNull();
         $service = new ItemGrantService($items, Mockery::mock(ItemGrantRepository::class), Mockery::mock(AuditWriter::class));
 
         $this->expectException(ItemNotFoundException::class);

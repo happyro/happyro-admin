@@ -54,6 +54,19 @@ export default [
     ],
   },
   {
+    path: '/settings',
+    name: 'settings',
+    icon: 'setting',
+    access: 'canManageSettings',
+    routes: [
+      {
+        path: '/settings/game-data',
+        name: 'gameData',
+        component: './settings/game-data',
+      },
+    ],
+  },
+  {
     path: '/user',
     layout: false,
     routes: [

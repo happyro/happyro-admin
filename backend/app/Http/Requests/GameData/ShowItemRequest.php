@@ -25,8 +25,6 @@ class ShowItemRequest extends FormRequest
     {
         return [
             'range' => ['nullable', Rule::in(['client', 'server', 'all'])],
-            'clientVersion' => ['nullable', 'string', 'max:64'],
-            'serverVersion' => ['nullable', 'string', 'max:64'],
         ];
     }
 }

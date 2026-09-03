@@ -5,6 +5,7 @@ namespace Tests\Feature\GameData;
 use App\Contracts\GameData\ItemAssetRepository;
 use App\Contracts\GameData\ItemViewBuilder;
 use App\Models\GameDataCatalog;
+use App\Models\GameDataSetting;
 use App\Models\GameItem;
 use App\Models\GameItemSource;
 use App\Models\Role;
@@ -20,6 +21,7 @@ final class ListItemsTest extends TestCase
     {
         $client = GameDataCatalog::factory()->create(['source' => 'client', 'ruleset' => 'client', 'source_version' => 'kro-20211105']);
         $server = GameDataCatalog::factory()->create(['source' => 'server', 'ruleset' => 'renewal', 'source_version' => 'server123']);
+        GameDataSetting::query()->whereKey(1)->update(['client_version' => 'kro-20211105', 'server_version' => 'server123']);
         $this->source($client, 501, [
             'name_zh_cn' => '客户端红药',
             'name_en_us' => 'Red Potion',
@@ -32,17 +34,16 @@ final class ListItemsTest extends TestCase
         $this->withoutAssets();
         $this->actingAs($this->superAdmin());
 
-        $versions = 'clientVersion=kro-20211105&serverVersion=server123';
-        $this->getJson("/api/game-data/items?range=client&{$versions}")->assertOk()->assertJsonPath('total', 2);
-        $this->getJson("/api/game-data/items?range=server&{$versions}")->assertOk()->assertJsonPath('total', 2);
-        $this->getJson('/api/game-data/items?range=all&clientVersion=kro-20211105&serverVersion=server123')
+        $this->getJson('/api/game-data/items?range=client')->assertOk()->assertJsonPath('total', 2);
+        $this->getJson('/api/game-data/items?range=server')->assertOk()->assertJsonPath('total', 2);
+        $this->getJson('/api/game-data/items?range=all')
             ->assertOk()
             ->assertJsonPath('total', 3)
             ->assertJsonPath('data.0.source', 'both')
             ->assertJsonPath('data.0.names.zh-CN', '客户端红药')
             ->assertJsonPath('data.0.description.0', '恢复 HP');
 
-        $this->getJson("/api/game-data/items?range=client&{$versions}&type=Weapon&subtype=1hSword")
+        $this->getJson('/api/game-data/items?range=client&type=Weapon&subtype=1hSword')
             ->assertOk()
             ->assertJsonPath('total', 1)
             ->assertJsonPath('data.0.Id', 501)
@@ -56,13 +57,14 @@ final class ListItemsTest extends TestCase
     {
         $client = GameDataCatalog::factory()->create(['source' => 'client', 'ruleset' => 'client', 'source_version' => 'client1']);
         $server = GameDataCatalog::factory()->create(['source' => 'server', 'ruleset' => 'renewal', 'source_version' => 'server1']);
+        GameDataSetting::query()->whereKey(1)->update(['client_version' => 'client1', 'server_version' => 'server1']);
         $this->source($client, 501, ['name_zh_cn' => '特别红药', 'name_en_us' => 'Red Potion']);
         $this->source($server, 501, ['name_zh_cn' => '红色药水', 'name_en_us' => 'Red Potion', 'item_type' => 'Healing']);
         app(ItemViewBuilder::class)->rebuildAll();
         $this->withoutAssets();
         $this->actingAs($this->superAdmin());
 
-        $this->getJson('/api/game-data/items?range=all&clientVersion=client1&serverVersion=server1&query=特别&type=Healing')
+        $this->getJson('/api/game-data/items?range=all&query=特别&type=Healing')
             ->assertOk()
             ->assertJsonPath('total', 1)
             ->assertJsonPath('data.0.Id', 501);

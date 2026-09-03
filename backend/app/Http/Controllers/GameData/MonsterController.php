@@ -6,7 +6,6 @@ use App\Contracts\GameData\MonsterAssetRepository;
 use App\Contracts\GameData\MonsterRepository;
 use App\Data\GameData\MonsterQuery;
 use App\Http\Requests\GameData\ListMonstersRequest;
-use App\Http\Requests\GameData\ShowMonsterRequest;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -20,7 +19,6 @@ final class MonsterController
         $result = $this->monsters->search(new MonsterQuery(
             $data['query'] ?? null, $data['race'] ?? null, $data['element'] ?? null,
             $data['size'] ?? null, $data['boss'] ?? null,
-            $data['serverVersion'] ?? config('happyro.game_data.default_server_version'),
             $data['page'] ?? 1, $data['perPage'] ?? 20,
         ));
         $result['data'] = array_map($this->withImage(...), $result['data']);
@@ -28,18 +26,12 @@ final class MonsterController
         return response()->json([...$result, 'success' => true]);
     }
 
-    public function show(ShowMonsterRequest $request, int $monsterId): JsonResponse
+    public function show(int $monsterId): JsonResponse
     {
-        $version = (string) $request->validated('serverVersion', config('happyro.game_data.default_server_version'));
-        $monster = $this->monsters->find($monsterId, $version);
+        $monster = $this->monsters->find($monsterId);
         abort_unless($monster, 404);
 
         return response()->json(['data' => $this->withImage($monster), 'success' => true]);
-    }
-
-    public function versions(): JsonResponse
-    {
-        return response()->json(['data' => $this->monsters->versions(), 'success' => true]);
     }
 
     public function image(int $monsterId): BinaryFileResponse

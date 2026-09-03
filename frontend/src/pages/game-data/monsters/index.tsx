@@ -2,12 +2,11 @@ import { EyeOutlined } from '@ant-design/icons';
 import {
   PageContainer,
   type ProColumns,
-  type ProFormInstance,
   ProTable,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { App, Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
+import { useMemo, useState } from 'react';
 import {
   MONSTER_ELEMENTS,
   MONSTER_RACES,
@@ -17,7 +16,6 @@ import {
   type GameDataMonster,
   getMonster,
   listMonsters,
-  listMonsterVersions,
   monsterName,
 } from '@/services/game-data/monsters';
 
@@ -27,23 +25,10 @@ const typeLabel = (group: string, value: string, t: Translate) =>
 
 export default function Monsters() {
   const intl = useIntl();
-  const { message } = App.useApp();
-  const formRef = useRef<ProFormInstance | undefined>(undefined);
   const [detail, setDetail] = useState<GameDataMonster>();
-  const [versions, setVersions] = useState<string[]>([]);
   const t = (id: string, fallback: string) =>
     intl.formatMessage({ id, defaultMessage: fallback });
   const locale = intl.locale;
-  useEffect(() => {
-    listMonsterVersions()
-      .then(({ data }) => {
-        setVersions(data);
-        formRef.current?.setFieldValue('serverVersion', data[0]);
-      })
-      .catch(() =>
-        message.error(t('gameData.monster.loadFailed', '魔物资料加载失败')),
-      );
-  }, []);
   const columns = useMemo<ProColumns<GameDataMonster>[]>(
     () => [
       {
@@ -108,14 +93,6 @@ export default function Monsters() {
         valueEnum: { 1: t('common.yes', '是'), 0: t('common.no', '否') },
       },
       {
-        title: t('gameData.item.serverVersion', '服务端版本'),
-        dataIndex: 'serverVersion',
-        hideInTable: true,
-        valueEnum: Object.fromEntries(
-          versions.map((version) => [version, version.slice(0, 10)]),
-        ),
-      },
-      {
         title: t('common.actions', '操作'),
         valueType: 'option',
         width: 90,
@@ -123,28 +100,18 @@ export default function Monsters() {
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={async () =>
-              setDetail(
-                (
-                  await getMonster(
-                    row.Id,
-                    formRef.current?.getFieldValue('serverVersion'),
-                  )
-                ).data,
-              )
-            }
+            onClick={async () => setDetail((await getMonster(row.Id)).data)}
           >
             {t('common.detail', '详情')}
           </Button>
         ),
       },
     ],
-    [intl.locale, versions],
+    [intl.locale],
   );
   return (
     <PageContainer title={t('gameData.monsters.title', '魔物图鉴')}>
       <ProTable<GameDataMonster>
-        formRef={formRef}
         rowKey="Id"
         columns={columns}
         search={{ defaultCollapsed: false }}
@@ -172,27 +139,39 @@ export default function Monsters() {
 function MonsterImage({
   monster,
   locale,
+  detail = false,
 }: {
   monster: GameDataMonster;
   locale: string;
+  detail?: boolean;
 }) {
+  const frame = detail
+    ? { width: 160, height: 140, imageWidth: 150, imageHeight: 128 }
+    : { width: 72, height: 56, imageWidth: 68, imageHeight: 48 };
   return (
     <span
       style={{
         display: 'inline-flex',
-        width: 72,
-        height: 72,
+        width: frame.width,
+        height: frame.height,
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
       }}
     >
       {monster.image ? (
         <img
           src={monster.image}
           alt={monsterName(monster, locale)}
-          width={72}
-          height={72}
-          style={{ objectFit: 'contain', imageRendering: 'pixelated' }}
+          style={{
+            display: 'block',
+            width: 'auto',
+            height: 'auto',
+            maxWidth: frame.imageWidth,
+            maxHeight: frame.imageHeight,
+            objectFit: 'contain',
+            imageRendering: 'pixelated',
+          }}
         />
       ) : (
         <Empty
@@ -218,7 +197,7 @@ function MonsterDetails({
   return (
     <Space orientation="vertical" size={16} style={{ width: '100%' }}>
       <div style={{ textAlign: 'center' }}>
-        <MonsterImage monster={monster} locale={locale} />
+        <MonsterImage monster={monster} locale={locale} detail />
       </div>
       <Descriptions bordered size="small" column={2}>
         <Descriptions.Item label={t('gameData.monster.id', '魔物 ID')}>

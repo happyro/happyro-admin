@@ -30,10 +30,11 @@
 
 ## 版本模型
 
-- `客户端资源` 与 `服务端版本` 是两个独立的选择项，不合并为一个版本号。
-- 客户端资源当前固定为 `kRO 2021-11-05`（内部目录 `kro-20211105`），决定 `itemInfo_true.json`、`data.grf`、图片和客户端说明的来源。
-- 服务端版本来自 HappyRO Server 的 rAthena 数据快照，英文基线为 `2fe6ab3dc4d8`；界面显示短 hash，完整 hash 保存在资料目录元数据中。
-- 图鉴查询请求同时携带两个版本选择，例如：`客户端资源 [kRO 2021-11-05]`、`服务端版本 [rAthena 2fe6ab3dc4]`。
+- `客户端资源` 与 `服务端版本` 是两个独立的全局配置，不合并为一个版本号，也不在各图鉴的筛选区域重复选择。
+- 客户端资源当前为 `kRO 2021-11-05`（内部版本 `kro-20211105`），决定 `itemInfo_true.json`、`data.grf`、图片和客户端说明的来源。
+- 服务端版本来自 HappyRO Server 的 rAthena 数据快照，英文基线为 `2fe6ab3dc4d8`；完整 hash 保存在资料目录和全局设置中。
+- 当前版本组合保存在 `happyro_admin.game_data_settings` 单例记录中，由“系统设置 / 游戏资料”统一修改，对全部管理员、图鉴 API 和运营功能生效。
+- 可选客户端版本必须存在于客户端物品目录；可选服务端版本必须同时存在于物品与魔物 Renewal 目录，避免设置后部分图鉴变为空数据。
 
 ## 数据范围
 
@@ -73,6 +74,7 @@
 - `item_subtype` 来自 rAthena `item_db_equip.yml` 的 `SubType`；来源表保留规范化值，合并视图使用独立列支持武器类型筛选。普通类型查询和武器细分查询分别使用覆盖 `item_type` 与 `item_type + item_subtype` 的组合索引。
 - 只有选择 `Type=Weapon` 时才显示武器类型筛选；切换到其他物品类型时隐藏并清空武器类型。稳定值与 rAthena 保持一致，显示名称由前端国际化资源提供。
 - `php artisan game-data:import-items --all` 导入客户端与 Renewal 服务端快照，并在导入后重建合并投影；HTTP API 只查询 `game_item_views`，不在请求期间解析大体积 JSON。
+- 物品、魔物仓储通过可注入的 `GameDataSettingRepository` 获取全局版本，HTTP 查询参数不再接受客户端或服务端版本，CLI 和运营用例使用同一配置来源。
 - 导入以 `(resource_type, source, ruleset, source_version)` 定位资料目录，并按 `(game_data_catalog_id, game_item_id)` 执行来源 upsert；每轮同步会删除同一版本中已不存在的记录，重复执行结果一致。
 - `php artisan game-data:rebuild-item-views --run` 可从来源记录独立重建全部版本组合；不带 `--run` 时只输出帮助，不执行写操作。
 
@@ -124,6 +126,7 @@
 ## 安全边界
 
 - 发放权限使用 `operations.item-grant`，资料查询使用 `game-data.view`。
+- 全局资料版本设置使用 `settings.manage`，读取和修改接口均不对普通资料查看者开放；修改会记录操作人、修改前后版本和客户端上下文。
 - 物品图鉴操作列为具备发放权限的管理员提供发放入口，预填当前物品并复用运营管理的邮件发放表单和后端用例。
 - 收件目标可按角色 ID、角色名或账号用户名实时检索；检索接口使用 `target`，选定后发放接口仍提交唯一的 `char_id`。
 - 运营管理的发放页面可按物品 ID 或双语名称实时检索服务端可发放物品；选定后发放接口提交唯一的 `item_id`。

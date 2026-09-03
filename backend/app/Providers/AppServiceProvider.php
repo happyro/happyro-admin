@@ -8,6 +8,7 @@ use App\Contracts\Auth\LoginThrottle;
 use App\Contracts\Auth\PermissionChecker;
 use App\Contracts\Auth\UserProvisioner;
 use App\Contracts\Auth\UserRepository;
+use App\Contracts\GameData\GameDataSettingRepository;
 use App\Contracts\GameData\ItemAssetRepository;
 use App\Contracts\GameData\ItemRepository;
 use App\Contracts\GameData\ItemSnapshotReader;
@@ -26,6 +27,7 @@ use App\Services\Auth\EloquentUserProvisioner;
 use App\Services\Auth\EloquentUserRepository;
 use App\Services\Auth\RateLimiterLoginThrottle;
 use App\Services\Auth\SessionAuthenticationService;
+use App\Services\GameData\DatabaseGameDataSettingRepository;
 use App\Services\GameData\DatabaseItemRepository;
 use App\Services\GameData\DatabaseItemViewBuilder;
 use App\Services\GameData\DatabaseMonsterRepository;
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PlayerAccountRepository::class, DatabasePlayerAccountRepository::class);
         $this->app->bind(PlayerCharacterRepository::class, DatabasePlayerCharacterRepository::class);
         $this->app->bind(ItemRepository::class, DatabaseItemRepository::class);
+        $this->app->bind(GameDataSettingRepository::class, DatabaseGameDataSettingRepository::class);
         $this->app->bind(ItemSnapshotReader::class, JsonItemSnapshotReader::class);
         $this->app->bind(ItemViewBuilder::class, DatabaseItemViewBuilder::class);
         $this->app->bind(ItemAssetRepository::class, function () {

@@ -25,8 +25,6 @@ final class ItemController
             $data['type'] ?? null,
             $data['subtype'] ?? null,
             $data['range'] ?? 'client',
-            $data['clientVersion'] ?? config('happyro.game_data.default_client_version'),
-            $data['serverVersion'] ?? config('happyro.game_data.default_server_version'),
             $data['page'] ?? 1,
             $data['perPage'] ?? 20,
         ));
@@ -38,22 +36,12 @@ final class ItemController
     public function show(ShowItemRequest $request, int $itemId): JsonResponse
     {
         $data = $request->validated();
-        $item = $this->items->find(
-            $itemId,
-            $data['range'] ?? 'client',
-            $data['clientVersion'] ?? config('happyro.game_data.default_client_version'),
-            $data['serverVersion'] ?? config('happyro.game_data.default_server_version'),
-        );
+        $item = $this->items->find($itemId, $data['range'] ?? 'client');
         abort_unless($item, 404);
 
         $item = $this->withAssetUrls($item);
 
         return response()->json(['data' => $item, 'success' => true]);
-    }
-
-    public function versions(): JsonResponse
-    {
-        return response()->json(['data' => $this->items->versions(), 'success' => true]);
     }
 
     public function icon(int $itemId): BinaryFileResponse

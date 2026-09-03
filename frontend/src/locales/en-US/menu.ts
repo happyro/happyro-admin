@@ -10,6 +10,8 @@ export default {
   'menu.players.account': 'User accounts',
   'menu.players.character': 'Game characters',
   'menu.players.loginLog': 'Login logs',
+  'menu.settings': 'System settings',
+  'menu.settings.gameData': 'Game data',
   'menu.welcome': 'Welcome',
   'menu.more-blocks': 'More Blocks',
   'menu.home': 'Home',

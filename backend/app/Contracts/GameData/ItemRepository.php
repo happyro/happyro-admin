@@ -10,8 +10,5 @@ interface ItemRepository
     public function search(ItemQuery $query): array;
 
     /** @return array<string, mixed>|null */
-    public function find(int $itemId, string $range, string $clientVersion, string $serverVersion): ?array;
-
-    /** @return array{client: list<string>, server: list<string>} */
-    public function versions(): array;
+    public function find(int $itemId, string $range): ?array;
 }

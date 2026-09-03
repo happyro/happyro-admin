@@ -7,6 +7,10 @@ import settingDrawer from './en-US/settingDrawer';
 import settings from './en-US/settings';
 
 export default {
+  'settings.gameData.title': 'Game data',
+  'settings.gameData.loadFailed': 'Failed to load game data settings',
+  'settings.gameData.saved': 'Game data settings saved',
+  'common.save': 'Save',
   'gameData.monsters.title': 'Monster catalog',
   'gameData.monster.image': 'Sprite',
   'gameData.monster.id': 'Monster ID',

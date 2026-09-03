@@ -29,8 +29,6 @@ export type ItemQuery = {
   type?: string;
   subtype?: string;
   range?: ItemDataRange;
-  clientVersion?: string;
-  serverVersion?: string;
 };
 
 export function itemName(item: GameDataItem, locale: string): string {
@@ -44,8 +42,4 @@ export async function listItems(params: Record<string, unknown>) {
 
 export async function getItem(id: number, query: ItemQuery) {
   return request<{ data: GameDataItem }>(`/api/game-data/items/${id}`, { params: query });
-}
-
-export async function listItemVersions() {
-  return request<{ data: { client: string[]; server: string[] } }>('/api/game-data/items/versions');
 }
