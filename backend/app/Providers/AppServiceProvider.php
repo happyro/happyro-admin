@@ -12,6 +12,9 @@ use App\Contracts\GameData\ItemAssetRepository;
 use App\Contracts\GameData\ItemRepository;
 use App\Contracts\GameData\ItemSnapshotReader;
 use App\Contracts\GameData\ItemViewBuilder;
+use App\Contracts\GameData\MonsterAssetRepository;
+use App\Contracts\GameData\MonsterRepository;
+use App\Contracts\GameData\MonsterSnapshotReader;
 use App\Contracts\Operations\ItemGrantRepository;
 use App\Contracts\Operations\ItemGrantTargetRepository;
 use App\Contracts\Players\LoginLogRepository;
@@ -25,8 +28,11 @@ use App\Services\Auth\RateLimiterLoginThrottle;
 use App\Services\Auth\SessionAuthenticationService;
 use App\Services\GameData\DatabaseItemRepository;
 use App\Services\GameData\DatabaseItemViewBuilder;
+use App\Services\GameData\DatabaseMonsterRepository;
 use App\Services\GameData\JsonItemSnapshotReader;
+use App\Services\GameData\JsonMonsterSnapshotReader;
 use App\Services\GameData\LocalItemAssetRepository;
+use App\Services\GameData\LocalMonsterAssetRepository;
 use App\Services\Operations\DatabaseItemGrantRepository;
 use App\Services\Operations\DatabaseItemGrantTargetRepository;
 use App\Services\Operations\ItemGrantService;
@@ -60,6 +66,11 @@ class AppServiceProvider extends ServiceProvider
             );
         });
         $this->app->bind(ItemGrantRepository::class, DatabaseItemGrantRepository::class);
+        $this->app->bind(MonsterRepository::class, DatabaseMonsterRepository::class);
+        $this->app->bind(MonsterSnapshotReader::class, JsonMonsterSnapshotReader::class);
+        $this->app->bind(MonsterAssetRepository::class, fn () => new LocalMonsterAssetRepository(
+            config('happyro.game_data.monster_image_root'),
+        ));
         $this->app->bind(ItemGrantTargetRepository::class, DatabaseItemGrantTargetRepository::class);
         $this->app->bind(ItemGrantService::class);
         $this->app->bind(LoginLogRepository::class, DatabaseLoginLogRepository::class);

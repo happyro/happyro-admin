@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\GameData\ItemController;
+use App\Http\Controllers\GameData\MonsterController;
 use App\Http\Controllers\Operations\ItemGrantController;
 use App\Http\Controllers\Operations\ItemGrantItemController;
 use App\Http\Controllers\Operations\ItemGrantTargetController;
@@ -40,6 +41,10 @@ Route::prefix('api/game-data')->middleware(['auth:sanctum', 'permission:game-dat
     Route::get('/items/{itemId}', [ItemController::class, 'show'])->whereNumber('itemId');
     Route::get('/items/{itemId}/icon', [ItemController::class, 'icon'])->whereNumber('itemId');
     Route::get('/items/{itemId}/illustration', [ItemController::class, 'illustration'])->whereNumber('itemId');
+    Route::get('/monsters', [MonsterController::class, 'index']);
+    Route::get('/monsters/versions', [MonsterController::class, 'versions']);
+    Route::get('/monsters/{monsterId}', [MonsterController::class, 'show'])->whereNumber('monsterId');
+    Route::get('/monsters/{monsterId}/image', [MonsterController::class, 'image'])->whereNumber('monsterId');
 });
 
 Route::prefix('api/operations')->middleware(['auth:sanctum', 'permission:operations.item-grant'])->group(function () {

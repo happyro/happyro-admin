@@ -7,7 +7,8 @@
 ## 第一版
 
 - `物品图鉴`：按客户端、服务端或两者并集查询物品 ID、双语名称、类型、价格和说明。
-- `魔物图鉴`、`NPC 查询`、`地图查询`：保留独立页面，后续分别接入对应资料。
+- `魔物图鉴`：查询魔物双语名称、等级、生命、种族、属性、体型、首领状态、能力值和掉落，并显示客户端游戏精灵。
+- `NPC 查询`、`地图查询`：保留独立页面，后续分别接入对应资料。
 - `发放物品` 属于运营写操作，放在“运营管理”中，不属于只读的游戏资料目录。
 - 物品名称使用资源快照中的通用 `names` 多语言结构，界面文案使用国际化资源；物品快照来源记录在资源文件中。
 
@@ -104,6 +105,14 @@
 - 仅客户端工具读取 kRO merged 的 `itemInfo_true.json`，用 Renewal 快照中的 `en-US` 名称补齐英文；生成前要求客户端 ID 全部命中服务端快照。
 - 资源路径必须以 GRF 解压 `manifest.json` 为准：先精确匹配，再进行 Unicode NFC、不区分大小写和 CP949 乱码恢复匹配，将磁盘真实相对路径写入 `item-assets.json`。禁止在 Laravel 请求期间扫描目录或猜测文件名。
 - 两条生成流水线共用通用游戏资料构建工程，但客户端和服务端的领域规则互相隔离；完整结构、参数和测试命令见根仓库 `tools/resources/README.md`。
+
+## 魔物资料
+
+- `python3 tools/resources/catalog/main.py monsters` 从当前 Renewal `mob_db.yml` 读取中文服务端属性，并从 Git 基线 `2fe6ab3dc4d8` 读取英文名称。
+- 客户端名称和精灵名读取 HappyRO Client 的 `MonsterNameTable.js` 与 `MonsterTable.js`，精灵文件来自只读的 kRO 2021-11-05 GRF 解压目录。
+- 工具生成 `backend/resources/game-data/monsters/renewal.json` 和 `monster-assets.json`；PNG 写入被 Git 忽略的 `work/game-data/monsters/kro-20211105/`。
+- `php artisan game-data:import-monsters --renewal` 按服务端版本幂等写入 MariaDB，HTTP 请求不解析 YAML、JavaScript 或 SPR。
+- SPR 版本或客户端映射缺失时保留服务端魔物记录并显示空形象，不以其他魔物图片代替。
 
 ## 验收记录
 
