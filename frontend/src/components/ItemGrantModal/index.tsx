@@ -22,7 +22,7 @@ export default function ItemGrantModal({ itemId, itemName }: Props) {
       title={intl.formatMessage(
         {
           id: 'operations.itemGrants.modalTitle',
-          defaultMessage: '发放物品：{name} · ID {id}',
+          defaultMessage: '{name} · ID {id}',
         },
         { name: itemName, id: itemId },
       )}

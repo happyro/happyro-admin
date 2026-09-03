@@ -8,10 +8,12 @@ import settings from './zh-CN/settings';
 
 export default {
   'gameData.item.icon': '图标',
+  'gameData.item.image': '图片',
+  'gameData.item.noImage': '暂无图片',
   'gameData.item.script': '服务器脚本',
   'operations.itemGrants.title': '发放物品',
   'operations.itemGrants.action': '发放',
-  'operations.itemGrants.modalTitle': '发放物品：{name} · ID {id}',
+  'operations.itemGrants.modalTitle': '{name} · ID {id}',
   'operations.itemGrants.success': '邮件已发送',
   'operations.itemGrants.item': '物品',
   'operations.itemGrants.itemPlaceholder': '输入物品 ID 或名称',
