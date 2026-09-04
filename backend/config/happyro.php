@@ -16,4 +16,10 @@ return ['players' => [
     'monster_snapshot' => base_path('resources/game-data/monsters/renewal.json'),
     'monster_image_root' => env('GAME_MONSTER_IMAGE_ROOT', base_path('../../../work/game-data/monsters/kro-20211105')),
     'grf_root' => env('GAME_RESOURCE_ROOT', base_path('../../../work/grf-extract/kro-20211105/data/data')),
+], 'game_control' => [
+    'base_url' => env('GAME_CONTROL_BASE_URL', 'http://127.0.0.1:8889'),
+    'token' => env('GAME_CONTROL_TOKEN', ''),
+    'connect_timeout' => (int) env('GAME_CONTROL_CONNECT_TIMEOUT', 1),
+    'timeout' => (int) env('GAME_CONTROL_TIMEOUT', 3),
+    'battle_config_path' => env('GAME_SERVER_BATTLE_CONFIG_PATH', base_path('../../happyro-server/conf/import/battle_conf.txt')),
 ]];

@@ -12,6 +12,7 @@ export default {
   'menu.players.loginLog': 'Login logs',
   'menu.settings': 'System settings',
   'menu.settings.gameData': 'Game data',
+  'menu.settings.gameRules': 'Game rules',
   'menu.welcome': 'Welcome',
   'menu.more-blocks': 'More Blocks',
   'menu.home': 'Home',

@@ -4,9 +4,10 @@ import {
   type ProColumns,
   ProTable,
 } from '@ant-design/pro-components';
-import { useIntl } from '@umijs/max';
+import { useAccess, useIntl } from '@umijs/max';
 import { Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
+import MonsterSpawnModal from '@/components/MonsterSpawnModal';
 import {
   MONSTER_ELEMENTS,
   MONSTER_RACES,
@@ -25,6 +26,7 @@ const typeLabel = (group: string, value: string, t: Translate) =>
 
 export default function Monsters() {
   const intl = useIntl();
+  const access = useAccess();
   const [detail, setDetail] = useState<GameDataMonster>();
   const t = (id: string, fallback: string) =>
     intl.formatMessage({ id, defaultMessage: fallback });
@@ -97,13 +99,21 @@ export default function Monsters() {
         valueType: 'option',
         width: 90,
         render: (_, row) => (
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={async () => setDetail((await getMonster(row.Id)).data)}
-          >
-            {t('common.detail', '详情')}
-          </Button>
+          <Space>
+            {access.canGameControl && access.canViewPlayers && (
+              <MonsterSpawnModal
+                monsterId={row.Id}
+                monsterName={monsterName(row, locale)}
+              />
+            )}
+            <Button
+              type="link"
+              icon={<EyeOutlined />}
+              onClick={async () => setDetail((await getMonster(row.Id)).data)}
+            >
+              {t('common.detail', '详情')}
+            </Button>
+          </Space>
         ),
       },
     ],

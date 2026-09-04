@@ -64,6 +64,11 @@ export default [
         name: 'gameData',
         component: './settings/game-data',
       },
+      {
+        path: '/settings/game-rules',
+        name: 'gameRules',
+        component: './settings/game-rules',
+      },
     ],
   },
   {

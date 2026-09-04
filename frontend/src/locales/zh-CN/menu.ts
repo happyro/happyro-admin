@@ -12,6 +12,7 @@ export default {
   'menu.players.loginLog': '登录日志',
   'menu.settings': '系统设置',
   'menu.settings.gameData': '游戏资料',
+  'menu.settings.gameRules': '游戏规则',
   'menu.welcome': '欢迎',
   'menu.more-blocks': '更多区块',
   'menu.home': '首页',

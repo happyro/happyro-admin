@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\GameData\ItemController;
 use App\Http\Controllers\GameData\MonsterController;
+use App\Http\Controllers\GameData\WorldDataController;
+use App\Http\Controllers\Operations\GameServerCommandController;
 use App\Http\Controllers\Operations\ItemGrantController;
 use App\Http\Controllers\Operations\ItemGrantItemController;
 use App\Http\Controllers\Operations\ItemGrantTargetController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\Players\LoginLogController;
 use App\Http\Controllers\Players\PlayerAccountController;
 use App\Http\Controllers\Players\PlayerCharacterController;
 use App\Http\Controllers\Settings\GameDataSettingController;
+use App\Http\Controllers\Settings\GameServerSettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,6 +32,7 @@ Route::prefix('api/players')->middleware(['auth:sanctum', 'permission:players.vi
     Route::get('/accounts', [PlayerAccountController::class, 'index']);
     Route::post('/accounts', [PlayerAccountController::class, 'store'])->middleware('permission:players.edit');
     Route::get('/characters', [PlayerCharacterController::class, 'index']);
+    Route::get('/characters/{charId}', [PlayerCharacterController::class, 'show'])->whereNumber('charId');
     Route::get('/login-logs', [LoginLogController::class, 'index']);
     Route::patch('/accounts/{accountId}', [PlayerAccountController::class, 'update'])->middleware('permission:players.edit');
     Route::post('/accounts/{accountId}/password', [PlayerAccountController::class, 'password'])->middleware('permission:players.edit');
@@ -49,10 +53,19 @@ Route::prefix('api/game-data')->middleware(['auth:sanctum', 'permission:game-dat
 Route::prefix('api/settings')->middleware(['auth:sanctum', 'permission:settings.manage'])->group(function () {
     Route::get('/game-data', [GameDataSettingController::class, 'show']);
     Route::put('/game-data', [GameDataSettingController::class, 'update']);
+    Route::get('/game-rules', [GameServerSettingController::class, 'show']);
+    Route::put('/game-rules', [GameServerSettingController::class, 'update']);
 });
 
 Route::prefix('api/operations')->middleware(['auth:sanctum', 'permission:operations.item-grant'])->group(function () {
     Route::get('/item-grant-items', [ItemGrantItemController::class, 'index']);
     Route::get('/item-grant-targets', [ItemGrantTargetController::class, 'index']);
     Route::post('/item-grants/mail', [ItemGrantController::class, 'store']);
+});
+
+Route::prefix('api/operations/game-control')->middleware(['auth:sanctum', 'permission:operations.game-control'])->group(function () {
+    Route::get('/capabilities', [GameServerCommandController::class, 'capabilities']);
+    Route::get('/battle-config', [GameServerCommandController::class, 'battleConfig']);
+    Route::post('/commands', [GameServerCommandController::class, 'store']);
+    Route::get('/commands/{commandId}', [GameServerCommandController::class, 'show']);
 });

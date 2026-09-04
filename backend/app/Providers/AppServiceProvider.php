@@ -16,11 +16,21 @@ use App\Contracts\GameData\ItemViewBuilder;
 use App\Contracts\GameData\MonsterAssetRepository;
 use App\Contracts\GameData\MonsterRepository;
 use App\Contracts\GameData\MonsterSnapshotReader;
+use App\Contracts\GameServer\GameServerCommandRepository;
+use App\Contracts\GameServer\GameServerConfigWriter;
+use App\Contracts\GameServer\GameServerGateway;
+use App\Contracts\GameServer\GameServerSettingRepository;
+use App\Contracts\GameServer\GameServerSettingRevisionRepository;
 use App\Contracts\Operations\ItemGrantRepository;
 use App\Contracts\Operations\ItemGrantTargetRepository;
 use App\Contracts\Players\LoginLogRepository;
 use App\Contracts\Players\PlayerAccountRepository;
 use App\Contracts\Players\PlayerCharacterRepository;
+use App\Infrastructure\GameServer\FileGameServerConfigWriter;
+use App\Infrastructure\GameServer\HttpGameServerGateway;
+use App\Infrastructure\Persistence\GameServer\DatabaseGameServerCommandRepository;
+use App\Infrastructure\Persistence\GameServer\DatabaseGameServerSettingRepository;
+use App\Infrastructure\Persistence\GameServer\DatabaseGameServerSettingRevisionRepository;
 use App\Services\Audit\EloquentAuditWriter;
 use App\Services\Auth\EloquentPermissionChecker;
 use App\Services\Auth\EloquentUserProvisioner;
@@ -41,6 +51,7 @@ use App\Services\Operations\ItemGrantService;
 use App\Services\Players\DatabaseLoginLogRepository;
 use App\Services\Players\DatabasePlayerAccountRepository;
 use App\Services\Players\DatabasePlayerCharacterRepository;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -73,6 +84,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MonsterSnapshotReader::class, JsonMonsterSnapshotReader::class);
         $this->app->bind(MonsterAssetRepository::class, fn () => new LocalMonsterAssetRepository(
             config('happyro.game_data.monster_image_root'),
+        ));
+        $this->app->bind(GameServerCommandRepository::class, DatabaseGameServerCommandRepository::class);
+        $this->app->bind(GameServerSettingRevisionRepository::class, DatabaseGameServerSettingRevisionRepository::class);
+        $this->app->bind(GameServerSettingRepository::class, DatabaseGameServerSettingRepository::class);
+        $this->app->bind(GameServerConfigWriter::class, fn () => new FileGameServerConfigWriter(config('happyro.game_control.battle_config_path')));
+        $this->app->bind(GameServerGateway::class, fn ($app) => new HttpGameServerGateway(
+            $app->make(Factory::class),
+            config('happyro.game_control.base_url'),
+            config('happyro.game_control.token'),
+            config('happyro.game_control.connect_timeout'),
+            config('happyro.game_control.timeout'),
         ));
         $this->app->bind(ItemGrantTargetRepository::class, DatabaseItemGrantTargetRepository::class);
         $this->app->bind(ItemGrantService::class);
