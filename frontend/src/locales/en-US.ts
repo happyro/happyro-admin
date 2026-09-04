@@ -41,6 +41,8 @@ export default {
   'players.character.maintainAction': 'Action',
   'players.character.progression': 'Level and job',
   'players.character.stats': 'Stats',
+  'players.character.statsReset': 'Reset stats',
+  'players.character.statsRange': 'Enter a value from 1 to 32767',
   'players.character.skillsReset': 'Reset skill points',
   'players.character.vitalsRestore': 'Restore vitals',
   'players.character.maintainSuccess': 'Operation submitted',

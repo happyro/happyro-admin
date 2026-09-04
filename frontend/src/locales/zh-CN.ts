@@ -41,6 +41,8 @@ export default {
   'players.character.maintainAction': '操作',
   'players.character.progression': '等级与职业',
   'players.character.stats': '属性',
+  'players.character.statsReset': '重置属性',
+  'players.character.statsRange': '请输入 1 到 32767 之间的数值',
   'players.character.skillsReset': '重置技能点',
   'players.character.vitalsRestore': '恢复状态',
   'players.character.maintainSuccess': '操作已提交',
