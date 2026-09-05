@@ -9,13 +9,13 @@ use App\Exceptions\GameServerGatewayException;
 use App\Models\GameServerSettingRevision;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Mockery;
 use Tests\TestCase;
 
 final class GameServerSettingControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_super_admin_can_read_registered_values(): void
     {
