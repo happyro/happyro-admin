@@ -19,6 +19,9 @@ final class GameServerSettingRegistry
             'item_rate_card' => new GameServerSettingDefinition('item_rate_card', 0, 1000000, 'conf/battle/drops.conf'),
             'item_rate_card_boss' => new GameServerSettingDefinition('item_rate_card_boss', 0, 1000000, 'conf/battle/drops.conf'),
             'item_rate_card_mvp' => new GameServerSettingDefinition('item_rate_card_mvp', 0, 1000000, 'conf/battle/drops.conf'),
+            'navigation_teleport_policy' => new GameServerSettingDefinition('navigation_teleport_policy', 0, 2, 'conf/import/battle_conf.txt', 'policy'),
+            'navigation_teleport_cross_map' => new GameServerSettingDefinition('navigation_teleport_cross_map', 0, 1, 'conf/import/battle_conf.txt', 'boolean'),
+            'navigation_teleport_cooldown' => new GameServerSettingDefinition('navigation_teleport_cooldown', 0, 3600, 'conf/import/battle_conf.txt', 'seconds'),
         ];
     }
 

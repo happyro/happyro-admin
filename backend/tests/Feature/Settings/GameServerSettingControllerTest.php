@@ -27,7 +27,9 @@ final class GameServerSettingControllerTest extends TestCase
             ->getJson('/api/settings/game-rules')
             ->assertOk()
             ->assertJsonPath('data.values.base_exp_rate', 100)
-            ->assertJsonPath('data.definitions.base_exp_rate.source', 'conf/battle/exp.conf');
+            ->assertJsonPath('data.definitions.base_exp_rate.source', 'conf/battle/exp.conf')
+            ->assertJsonPath('data.definitions.navigation_teleport_policy.unit', 'policy')
+            ->assertJsonPath('data.definitions.navigation_teleport_policy.maximum', 2);
     }
 
     public function test_invalid_changes_are_rejected_before_service_execution(): void
@@ -48,6 +50,17 @@ final class GameServerSettingControllerTest extends TestCase
 
         $this->actingAs($this->superAdmin())->getJson('/api/settings/game-rules')
             ->assertServiceUnavailable()->assertJsonPath('message', '游戏服务暂时不可用');
+    }
+
+    public function test_navigation_teleport_policy_rejects_values_outside_registered_range(): void
+    {
+        $this->actingAs($this->superAdmin())
+            ->putJson('/api/settings/game-rules', [
+                'changes' => ['navigation_teleport_policy' => 3],
+                'reason' => 'invalid policy',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('changes.navigation_teleport_policy');
     }
 
     public function test_experience_rate_uses_its_registered_upper_bound(): void
