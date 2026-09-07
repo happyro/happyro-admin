@@ -33,4 +33,17 @@ final class GameServerSettingRegistryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $registry->validate('navigation_teleport_policy', 3);
     }
+
+    public function test_registers_game_tools_monster_spawn_settings_with_strict_ranges(): void
+    {
+        $registry = new GameServerSettingRegistry;
+
+        $this->assertSame('policy', $registry->validate('game_tools_monster_spawn_policy', 1)->unit);
+        $this->assertSame('seconds', $registry->validate('game_tools_monster_spawn_cooldown', 3600)->unit);
+        $this->assertSame('seconds', $registry->validate('game_tools_monster_spawn_duration', 60)->unit);
+        $this->assertSame('boolean', $registry->validate('game_tools_monster_spawn_allow_boss', 0)->unit);
+
+        $this->expectException(InvalidArgumentException::class);
+        $registry->validate('game_tools_monster_spawn_duration', 0);
+    }
 }

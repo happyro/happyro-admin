@@ -150,6 +150,67 @@ export default function GameRulesSettingPage() {
               width="md"
               rules={[{ required: true }]}
             />
+            <Typography.Title level={5}>
+              {t('settings.gameRules.section.monsterSpawn', '游戏内魔物召唤')}
+            </Typography.Title>
+            <ProFormRadio.Group
+              name="game_tools_monster_spawn_policy"
+              label={ruleLabel('game_tools_monster_spawn_policy', t)}
+              radioType="button"
+              options={[
+                {
+                  label: t('settings.gameRules.policy.disabled', '关闭'),
+                  value: 0,
+                },
+                {
+                  label: t('settings.gameRules.policy.admin', '仅管理员'),
+                  value: 1,
+                },
+                {
+                  label: t('settings.gameRules.policy.everyone', '所有玩家'),
+                  value: 2,
+                },
+              ]}
+              rules={[{ required: true }]}
+            />
+            <ProFormDigit
+              name="game_tools_monster_spawn_cooldown"
+              label={ruleLabel('game_tools_monster_spawn_cooldown', t)}
+              min={settings.definitions.game_tools_monster_spawn_cooldown.minimum}
+              max={settings.definitions.game_tools_monster_spawn_cooldown.maximum}
+              fieldProps={{ precision: 0 }}
+              addonAfter={t('settings.gameRules.unit.seconds', '秒')}
+              extra={ruleExtra(
+                settings.definitions.game_tools_monster_spawn_cooldown,
+                t,
+              )}
+              width="md"
+              rules={[{ required: true }]}
+            />
+            <ProFormDigit
+              name="game_tools_monster_spawn_duration"
+              label={ruleLabel('game_tools_monster_spawn_duration', t)}
+              min={settings.definitions.game_tools_monster_spawn_duration.minimum}
+              max={settings.definitions.game_tools_monster_spawn_duration.maximum}
+              fieldProps={{ precision: 0 }}
+              addonAfter={t('settings.gameRules.unit.seconds', '秒')}
+              extra={ruleExtra(
+                settings.definitions.game_tools_monster_spawn_duration,
+                t,
+              )}
+              width="md"
+              rules={[{ required: true }]}
+            />
+            <ProFormRadio.Group
+              name="game_tools_monster_spawn_allow_boss"
+              label={ruleLabel('game_tools_monster_spawn_allow_boss', t)}
+              radioType="button"
+              options={[
+                { label: t('common.enabled', '开启'), value: 1 },
+                { label: t('common.disabled', '关闭'), value: 0 },
+              ]}
+              rules={[{ required: true }]}
+            />
             <ProFormText
               name="reason"
               label={t('settings.gameRules.reason', '修改原因')}
