@@ -150,6 +150,20 @@ export default function GameRulesSettingPage() {
               width="md"
               rules={[{ required: true }]}
             />
+            <ProFormRadio.Group
+              name="navigation_map_channels_enabled"
+              label={ruleLabel('navigation_map_channels_enabled', t)}
+              radioType="button"
+              options={[
+                { label: t('common.enabled', '开启'), value: 1 },
+                { label: t('common.disabled', '关闭'), value: 0 },
+              ]}
+              extra={ruleExtra(
+                settings.definitions.navigation_map_channels_enabled,
+                t,
+              )}
+              rules={[{ required: true }]}
+            />
             <Typography.Title level={5}>
               {t('settings.gameRules.section.monsterSpawn', '游戏内魔物召唤')}
             </Typography.Title>

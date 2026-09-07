@@ -25,6 +25,7 @@ export default {
   'settings.gameRules.key.navigation_teleport_policy': '开放范围',
   'settings.gameRules.key.navigation_teleport_cross_map': '允许跨地图传送',
   'settings.gameRules.key.navigation_teleport_cooldown': '传送冷却',
+  'settings.gameRules.key.navigation_map_channels_enabled': '启用地图分流',
   'settings.gameRules.key.game_tools_monster_spawn_policy': '开放范围',
   'settings.gameRules.key.game_tools_monster_spawn_cooldown': '召唤冷却',
   'settings.gameRules.key.game_tools_monster_spawn_duration': '魔物存在时间',

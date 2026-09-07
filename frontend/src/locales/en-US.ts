@@ -26,6 +26,7 @@ export default {
   'settings.gameRules.key.navigation_teleport_cross_map':
     'Allow cross-map teleport',
   'settings.gameRules.key.navigation_teleport_cooldown': 'Teleport cooldown',
+  'settings.gameRules.key.navigation_map_channels_enabled': 'Enable map channels',
   'settings.gameRules.key.game_tools_monster_spawn_policy': 'Availability',
   'settings.gameRules.key.game_tools_monster_spawn_cooldown': 'Summon cooldown',
   'settings.gameRules.key.game_tools_monster_spawn_duration': 'Monster lifetime',

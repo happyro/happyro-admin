@@ -29,6 +29,7 @@ final class GameServerSettingRegistryTest extends TestCase
         $this->assertSame('policy', $registry->validate('navigation_teleport_policy', 2)->unit);
         $this->assertSame('boolean', $registry->validate('navigation_teleport_cross_map', 1)->unit);
         $this->assertSame('seconds', $registry->validate('navigation_teleport_cooldown', 3600)->unit);
+        $this->assertSame('boolean', $registry->validate('navigation_map_channels_enabled', 0)->unit);
 
         $this->expectException(InvalidArgumentException::class);
         $registry->validate('navigation_teleport_policy', 3);

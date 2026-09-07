@@ -22,6 +22,7 @@ final class GameServerSettingRegistry
             'navigation_teleport_policy' => new GameServerSettingDefinition('navigation_teleport_policy', 0, 2, 'conf/import/battle_conf.txt', 'policy'),
             'navigation_teleport_cross_map' => new GameServerSettingDefinition('navigation_teleport_cross_map', 0, 1, 'conf/import/battle_conf.txt', 'boolean'),
             'navigation_teleport_cooldown' => new GameServerSettingDefinition('navigation_teleport_cooldown', 0, 3600, 'conf/import/battle_conf.txt', 'seconds'),
+            'navigation_map_channels_enabled' => new GameServerSettingDefinition('navigation_map_channels_enabled', 0, 1, 'conf/import/battle_conf.txt', 'boolean'),
             'game_tools_monster_spawn_policy' => new GameServerSettingDefinition('game_tools_monster_spawn_policy', 0, 2, 'conf/import/battle_conf.txt', 'policy'),
             'game_tools_monster_spawn_cooldown' => new GameServerSettingDefinition('game_tools_monster_spawn_cooldown', 0, 3600, 'conf/import/battle_conf.txt', 'seconds'),
             'game_tools_monster_spawn_duration' => new GameServerSettingDefinition('game_tools_monster_spawn_duration', 1, 3600, 'conf/import/battle_conf.txt', 'seconds'),
