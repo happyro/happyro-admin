@@ -225,6 +225,31 @@ export default function GameRulesSettingPage() {
               ]}
               rules={[{ required: true }]}
             />
+            <Typography.Title level={5}>
+              {t('settings.gameRules.section.adventureTools', '冒险工具管理')}
+            </Typography.Title>
+            {[
+              'game_tools_character_maintenance_policy',
+              'game_tools_game_settings_policy',
+            ].map((key) => (
+              <ProFormRadio.Group
+                key={key}
+                name={key}
+                label={ruleLabel(key, t)}
+                radioType="button"
+                options={[
+                  {
+                    label: t('settings.gameRules.policy.admin', '仅管理员'),
+                    value: 1,
+                  },
+                  {
+                    label: t('settings.gameRules.policy.everyone', '所有玩家'),
+                    value: 2,
+                  },
+                ]}
+                rules={[{ required: true }]}
+              />
+            ))}
             <ProFormText
               name="reason"
               label={t('settings.gameRules.reason', '修改原因')}

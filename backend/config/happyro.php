@@ -24,4 +24,10 @@ return ['players' => [
     'connect_timeout' => (int) env('GAME_CONTROL_CONNECT_TIMEOUT', 1),
     'timeout' => (int) env('GAME_CONTROL_TIMEOUT', 3),
     'battle_config_path' => env('GAME_SERVER_BATTLE_CONFIG_PATH', base_path('../../happyro-server/conf/import/battle_conf.txt')),
-]];
+],
+    'adventure_tools' => [
+        'admin_group_ids' => array_values(array_filter(array_map(
+            static fn (string $value): int => (int) trim($value),
+            explode(',', env('GAME_ADMIN_GROUP_IDS', '2,3,4,10,99')),
+        ), static fn (int $value): bool => $value > 0)),
+    ]];

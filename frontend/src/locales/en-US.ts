@@ -31,6 +31,11 @@ export default {
   'settings.gameRules.key.game_tools_monster_spawn_cooldown': 'Summon cooldown',
   'settings.gameRules.key.game_tools_monster_spawn_duration': 'Monster lifetime',
   'settings.gameRules.key.game_tools_monster_spawn_allow_boss': 'Allow Boss / MVP monsters',
+  'settings.gameRules.key.game_tools_character_maintenance_policy':
+    'Character maintenance availability',
+  'settings.gameRules.key.game_tools_game_settings_policy':
+    'Game settings availability',
+  'settings.gameRules.section.adventureTools': 'Adventure tools management',
   'settings.gameRules.policy.disabled': 'Disabled',
   'settings.gameRules.policy.admin': 'Administrators only',
   'settings.gameRules.policy.everyone': 'All players',

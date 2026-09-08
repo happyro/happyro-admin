@@ -59,7 +59,10 @@ use App\Services\Operations\ItemGrantService;
 use App\Services\Players\DatabaseLoginLogRepository;
 use App\Services\Players\DatabasePlayerAccountRepository;
 use App\Services\Players\DatabasePlayerCharacterRepository;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Client\Factory;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -118,6 +121,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('adventure-tools', function (Request $request): Limit {
+            $principal = $request->attributes->get('game_session');
+            $key = $principal === null
+                ? 'anonymous:'.$request->ip()
+                : 'game-account:'.$principal->accountId;
+
+            return Limit::perMinute(60)->by($key);
+        });
     }
 }

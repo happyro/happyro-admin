@@ -4,6 +4,7 @@ namespace App\Data\GameServer;
 
 enum GameServerCommandType: string
 {
+    case CharacterSnapshot = 'character.snapshot';
     case CharacterProgressionUpdate = 'character.progression.update';
     case CharacterStatsUpdate = 'character.stats.update';
     case CharacterStatsReset = 'character.stats.reset';
