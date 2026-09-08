@@ -36,7 +36,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
             'payload' => ['present', 'array'],
             'payload.base_level' => ['sometimes', 'integer', 'min:1'],
             'payload.job_level' => ['sometimes', 'integer', 'min:1'],
-            'payload.job_id' => ['sometimes', 'integer', 'min:1'],
+            'payload.job_id' => ['sometimes', 'integer', 'min:0'],
             'payload.str' => ['sometimes', 'integer', 'min:1'],
             'payload.agi' => ['sometimes', 'integer', 'min:1'],
             'payload.vit' => ['sometimes', 'integer', 'min:1'],
