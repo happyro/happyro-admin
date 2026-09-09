@@ -10,6 +10,7 @@ final class GameServerSettingRegistry
     private const ADVENTURE_TOOL_GOVERNANCE_KEYS = [
         'game_tools_character_maintenance_policy',
         'game_tools_game_settings_policy',
+        'game_tools_item_grant_policy',
     ];
 
     /** @return array<string, GameServerSettingDefinition> */
@@ -34,6 +35,7 @@ final class GameServerSettingRegistry
             'game_tools_monster_spawn_allow_boss' => new GameServerSettingDefinition('game_tools_monster_spawn_allow_boss', 0, 1, 'conf/import/battle_conf.txt', 'boolean'),
             'game_tools_character_maintenance_policy' => new GameServerSettingDefinition('game_tools_character_maintenance_policy', 1, 2, 'conf/import/battle_conf.txt', 'policy'),
             'game_tools_game_settings_policy' => new GameServerSettingDefinition('game_tools_game_settings_policy', 1, 2, 'conf/import/battle_conf.txt', 'policy'),
+            'game_tools_item_grant_policy' => new GameServerSettingDefinition('game_tools_item_grant_policy', 1, 2, 'conf/import/battle_conf.txt', 'policy'),
         ];
     }
 

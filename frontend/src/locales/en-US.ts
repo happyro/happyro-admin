@@ -35,6 +35,8 @@ export default {
     'Character maintenance availability',
   'settings.gameRules.key.game_tools_game_settings_policy':
     'Game settings availability',
+  'settings.gameRules.key.game_tools_item_grant_policy':
+    'Item grant availability',
   'settings.gameRules.section.adventureTools': 'Adventure tools management',
   'settings.gameRules.policy.disabled': 'Disabled',
   'settings.gameRules.policy.admin': 'Administrators only',

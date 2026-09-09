@@ -88,8 +88,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ItemViewBuilder::class, DatabaseItemViewBuilder::class);
         $this->app->bind(ItemAssetRepository::class, function () {
             return new LocalItemAssetRepository(
-                config('happyro.game_data.item_asset_map'),
-                config('happyro.game_data.grf_root'),
+                config('happyro.game_data.item_image_root'),
             );
         });
         $this->app->bind(ItemGrantRepository::class, DatabaseItemGrantRepository::class);
@@ -121,13 +120,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        RateLimiter::for('adventure-tools', function (Request $request): Limit {
+        RateLimiter::for('adventure-tools-read', function (Request $request): Limit {
             $principal = $request->attributes->get('game_session');
             $key = $principal === null
                 ? 'anonymous:'.$request->ip()
                 : 'game-account:'.$principal->accountId;
 
-            return Limit::perMinute(60)->by($key);
+            return Limit::perMinute(120)->by($key);
+        });
+        RateLimiter::for('adventure-tools-action', function (Request $request): Limit {
+            $principal = $request->attributes->get('game_session');
+            $key = $principal === null
+                ? 'anonymous:'.$request->ip()
+                : 'game-account:'.$principal->accountId;
+
+            return Limit::perMinute(30)->by($key);
+        });
+        RateLimiter::for('adventure-tools-assets', function (Request $request): Limit {
+            $principal = $request->attributes->get('game_session');
+            $key = $principal === null
+                ? 'anonymous:'.$request->ip()
+                : 'game-account:'.$principal->accountId;
+
+            return Limit::perMinute(600)->by($key);
         });
     }
 }

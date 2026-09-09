@@ -34,6 +34,7 @@ export default {
     '角色维护开放范围',
   'settings.gameRules.key.game_tools_game_settings_policy':
     '游戏设置开放范围',
+  'settings.gameRules.key.game_tools_item_grant_policy': '物品发放开放范围',
   'settings.gameRules.section.adventureTools': '冒险工具管理',
   'settings.gameRules.policy.disabled': '关闭',
   'settings.gameRules.policy.admin': '仅管理员',

@@ -231,6 +231,7 @@ export default function GameRulesSettingPage() {
             {[
               'game_tools_character_maintenance_policy',
               'game_tools_game_settings_policy',
+              'game_tools_item_grant_policy',
             ].map((key) => (
               <ProFormRadio.Group
                 key={key}

@@ -10,6 +10,7 @@ use App\Exceptions\GameServerGatewayException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdventureTools\ApplyGameRulesRequest;
 use App\Http\Requests\AdventureTools\RunCharacterMaintenanceRequest;
+use App\Services\AdventureTools\AdventureToolAccessService;
 use App\Services\GameServer\ApplyGameServerSettingsService;
 use App\Services\GameServer\ExecuteGameServerCommandService;
 use App\Services\GameServer\GameServerSettingRegistry;
@@ -25,6 +26,7 @@ final class AdventureToolController extends Controller
         private SubmitGameServerCommandService $submit,
         private ExecuteGameServerCommandService $execute,
         private ApplyGameServerSettingsService $applySettings,
+        private AdventureToolAccessService $access,
     ) {}
 
     public function bootstrap(Request $request): JsonResponse
@@ -38,8 +40,9 @@ final class AdventureToolController extends Controller
 
         return response()->json(['data' => [
             'administrator' => $principal->administrator,
-            'characterMaintenanceAllowed' => $this->policyAllows($values['game_tools_character_maintenance_policy'] ?? 2, $principal),
-            'gameSettingsAllowed' => $this->policyAllows($values['game_tools_game_settings_policy'] ?? 2, $principal),
+            'characterMaintenanceAllowed' => $this->access->allowsPolicy($values['game_tools_character_maintenance_policy'] ?? 2, $principal),
+            'gameSettingsAllowed' => $this->access->allowsPolicy($values['game_tools_game_settings_policy'] ?? 2, $principal),
+            'itemGrantAllowed' => $this->access->allowsPolicy($values['game_tools_item_grant_policy'] ?? 2, $principal),
         ]]);
     }
 
@@ -47,7 +50,7 @@ final class AdventureToolController extends Controller
     {
         $principal = $this->principal($request);
         try {
-            $this->authorizePolicy('game_tools_character_maintenance_policy', $principal);
+            $this->access->authorize('game_tools_character_maintenance_policy', $principal);
 
             return response()->json(['data' => $this->gateway->characterSnapshot($principal->characterId)]);
         } catch (GameServerGatewayException $exception) {
@@ -59,7 +62,7 @@ final class AdventureToolController extends Controller
     {
         $principal = $this->principal($request);
         try {
-            $this->authorizePolicy('game_tools_character_maintenance_policy', $principal);
+            $this->access->authorize('game_tools_character_maintenance_policy', $principal);
             $data = $request->validated();
             $submission = $this->submit->submitForGameAccount(new GameServerCommandRequest(
                 $data['idempotency_key'],
@@ -86,7 +89,7 @@ final class AdventureToolController extends Controller
         } catch (GameServerGatewayException $exception) {
             return $this->gatewayError($exception);
         }
-        abort_unless($this->policyAllows($values['game_tools_game_settings_policy'] ?? 2, $principal), 403);
+        abort_unless($this->access->allowsPolicy($values['game_tools_game_settings_policy'] ?? 2, $principal), 403);
 
         $definitions = [];
         foreach ($this->registry->adventureToolDefinitions() as $definition) {
@@ -108,7 +111,7 @@ final class AdventureToolController extends Controller
     {
         $principal = $this->principal($request);
         try {
-            $this->authorizePolicy('game_tools_game_settings_policy', $principal);
+            $this->access->authorize('game_tools_game_settings_policy', $principal);
             $data = $request->validated();
             $this->applySettings->applyForGameAccount($data['changes'], $data['reason'], $principal->accountId);
 
@@ -121,17 +124,6 @@ final class AdventureToolController extends Controller
     private function principal(Request $request): GameSessionPrincipal
     {
         return $request->attributes->get('game_session');
-    }
-
-    private function authorizePolicy(string $key, GameSessionPrincipal $principal): void
-    {
-        $values = $this->gateway->battleConfig();
-        abort_unless($this->policyAllows($values[$key] ?? 2, $principal), 403);
-    }
-
-    private function policyAllows(int $policy, GameSessionPrincipal $principal): bool
-    {
-        return $policy === 2 || ($policy === 1 && $principal->administrator);
     }
 
     private function gatewayError(GameServerGatewayException $exception): JsonResponse
