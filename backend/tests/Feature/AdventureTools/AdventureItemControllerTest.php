@@ -39,10 +39,10 @@ final class AdventureItemControllerTest extends TestCase
         $this->mock(ItemAssetRepository::class)->shouldReceive('iconPath', 'illustrationPath')->andReturnNull();
     }
 
-    public function test_authenticated_player_can_search_server_items(): void
+    public function test_authenticated_player_can_search_client_supported_items(): void
     {
         $items = Mockery::mock(ItemRepository::class);
-        $items->expects('search')->with(Mockery::on(fn (ItemQuery $query): bool => $query->range === 'server' && $query->query === '红药'))
+        $items->expects('search')->with(Mockery::on(fn (ItemQuery $query): bool => $query->range === 'client' && $query->query === '红药'))
             ->andReturn(['data' => [$this->item()], 'total' => 1]);
         $this->app->instance(ItemRepository::class, $items);
 

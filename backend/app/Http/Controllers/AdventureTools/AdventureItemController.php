@@ -31,7 +31,7 @@ final class AdventureItemController
             $data['query'] ?? null,
             $data['type'] ?? null,
             $data['subtype'] ?? null,
-            'server',
+            'client',
             $data['page'] ?? 1,
             $data['perPage'] ?? 30,
         ));
