@@ -27,5 +27,6 @@ Route::prefix('adventure-tools')->middleware('game.session')->group(function ():
         Route::post('/character/commands', [AdventureToolController::class, 'maintain']);
         Route::put('/game-rules', [AdventureToolController::class, 'applyGameRules']);
         Route::post('/items/grants', [AdventureItemController::class, 'grant']);
+        Route::post('/currency/zeny/grants', [AdventureItemController::class, 'grantZeny']);
     });
 });

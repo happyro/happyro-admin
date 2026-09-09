@@ -6,11 +6,14 @@ use App\Contracts\GameData\ItemAssetRepository;
 use App\Contracts\GameData\ItemRepository;
 use App\Data\Auth\GameSessionPrincipal;
 use App\Data\GameData\ItemQuery;
+use App\Data\GameServer\OperationActor;
 use App\Exceptions\GameServerGatewayException;
 use App\Http\Requests\AdventureTools\GrantAdventureItemRequest;
+use App\Http\Requests\AdventureTools\GrantAdventureZenyRequest;
 use App\Http\Requests\AdventureTools\ListAdventureItemsRequest;
 use App\Services\AdventureTools\AdventureToolAccessService;
 use App\Services\AdventureTools\GrantAdventureItemService;
+use App\Services\Operations\GrantCharacterZenyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -22,6 +25,7 @@ final class AdventureItemController
         private readonly ItemAssetRepository $assets,
         private readonly AdventureToolAccessService $access,
         private readonly GrantAdventureItemService $grantItems,
+        private readonly GrantCharacterZenyService $grantZeny,
     ) {}
 
     public function index(ListAdventureItemsRequest $request): JsonResponse
@@ -38,6 +42,27 @@ final class AdventureItemController
         $result['data'] = array_map($this->withAssets(...), $result['data']);
 
         return response()->json($result);
+    }
+
+    public function grantZeny(GrantAdventureZenyRequest $request): JsonResponse
+    {
+        $principal = $this->principal($request);
+        try {
+            $this->access->authorize('game_tools_item_grant_policy', $principal);
+            $data = $request->validated();
+            $result = $this->grantZeny->grant(
+                $data['idempotency_key'],
+                $principal->characterId,
+                $data['amount'],
+                OperationActor::gameAccount($principal->accountId),
+            );
+
+            return response()->json(['data' => $result]);
+        } catch (GameServerGatewayException $exception) {
+            $status = in_array($exception->errorCode, ['character_offline', 'zeny_amount_exceeded', 'command_not_replayable'], true) ? 409 : 502;
+
+            return response()->json(['error' => ['code' => $exception->errorCode, 'message' => $exception->getMessage()]], $status);
+        }
     }
 
     public function show(int $itemId): JsonResponse

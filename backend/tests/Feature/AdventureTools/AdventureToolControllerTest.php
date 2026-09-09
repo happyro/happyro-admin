@@ -122,8 +122,34 @@ final class AdventureToolControllerTest extends TestCase
 
         $this->withHeaders($this->headers())->putJson('/api/adventure-tools/game-rules', [
             'changes' => ['game_tools_game_settings_policy' => 1],
-            'reason' => '不应允许游戏内修改权限',
-        ])->assertUnprocessable()->assertJsonValidationErrors('changes');
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('changes')
+            ->assertJsonMissingValidationErrors('reason');
+    }
+
+    public function test_accepts_skill_points_above_the_current_job_level(): void
+    {
+        $this->createSession(groupId: 0);
+        $gateway = Mockery::mock(GameServerGateway::class);
+        $gateway->expects('battleConfig')->once()->andReturn(['game_tools_character_maintenance_policy' => 2]);
+        $gateway->expects('execute')->once()->andReturn(new GameServerCommandResult(['skill_points' => 1000]));
+        $gateway->expects('characterSnapshot')->once()->with(150002)->andReturn([
+            ...$this->snapshot(),
+            'skill_points' => 1000,
+        ]);
+        $this->app->instance(GameServerGateway::class, $gateway);
+
+        $this->withHeaders($this->headers())->postJson('/api/adventure-tools/character/commands', [
+            'idempotency_key' => 'skill-points-1',
+            'type' => 'character.skill_points.update',
+            'payload' => ['skill_points' => 1000],
+        ])->assertOk()->assertJsonPath('data.skill_points', 1000);
+
+        $this->assertDatabaseHas('game_server_commands', [
+            'idempotency_key' => 'skill-points-1',
+            'type' => 'character.skill_points.update',
+            'status' => 'succeeded',
+        ]);
     }
 
     public function test_returns_service_unavailable_when_game_control_is_offline(): void

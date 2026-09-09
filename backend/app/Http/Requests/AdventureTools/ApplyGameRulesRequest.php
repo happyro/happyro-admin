@@ -27,7 +27,6 @@ final class ApplyGameRulesRequest extends FormRequest
         $rules = [
             'changes' => ['required', 'array', 'min:1'],
             'changes.*' => ['required', 'integer'],
-            'reason' => ['required', 'string', 'max:255'],
         ];
 
         $rules['changes'][] = 'array:'.implode(',', array_keys($definitions));

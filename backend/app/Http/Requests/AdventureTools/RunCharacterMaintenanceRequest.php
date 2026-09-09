@@ -28,6 +28,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
             'idempotency_key' => ['required', 'string', 'max:64'],
             'type' => ['required', 'string', Rule::in([
                 'character.progression.update',
+                'character.skill_points.update',
                 'character.stats.update',
                 'character.stats.reset',
                 'character.skills.reset',
@@ -37,6 +38,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
             'payload.base_level' => ['sometimes', 'integer', 'min:1'],
             'payload.job_level' => ['sometimes', 'integer', 'min:1'],
             'payload.job_id' => ['sometimes', 'integer', 'min:0'],
+            'payload.skill_points' => ['sometimes', 'integer', 'between:0,32767'],
             'payload.str' => ['sometimes', 'integer', 'min:1'],
             'payload.agi' => ['sometimes', 'integer', 'min:1'],
             'payload.vit' => ['sometimes', 'integer', 'min:1'],
@@ -55,6 +57,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
 
             $allowed = match ($this->string('type')->toString()) {
                 'character.progression.update' => ['base_level', 'job_level', 'job_id'],
+                'character.skill_points.update' => ['skill_points'],
                 'character.stats.update' => ['str', 'agi', 'vit', 'int', 'dex', 'luk'],
                 'character.vitals.restore' => ['vitals'],
                 default => [],
@@ -63,7 +66,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
                 $validator->errors()->add('payload', '操作参数无效');
             }
 
-            if (in_array($this->string('type')->toString(), ['character.progression.update', 'character.stats.update'], true)
+            if (in_array($this->string('type')->toString(), ['character.progression.update', 'character.skill_points.update', 'character.stats.update'], true)
                 && $this->array('payload') === []) {
                 $validator->errors()->add('payload', '至少需要修改一个字段');
             }
