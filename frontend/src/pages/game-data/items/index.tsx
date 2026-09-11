@@ -24,6 +24,7 @@ import {
   itemName,
   listItems,
 } from '@/services/game-data/items';
+import { toPlainRagnarokText } from '@/utils/format';
 
 type Translate = (id: string, fallback: string) => string;
 
@@ -328,7 +329,9 @@ function ItemDetails({
         </Descriptions.Item>
         <Descriptions.Item label={t('gameData.item.description', '说明')}>
           {item.description?.length
-            ? item.description.map((line) => <div key={line}>{line}</div>)
+            ? item.description.map((line) => (
+                <div key={line}>{toPlainRagnarokText(line)}</div>
+              ))
             : t('gameData.item.noDescription', '暂无说明')}
         </Descriptions.Item>
         <Descriptions.Item label={t('gameData.item.script', '服务器脚本')}>
