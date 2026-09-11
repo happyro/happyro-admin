@@ -10,7 +10,13 @@ import { Button, Descriptions, Drawer, Tag } from 'antd';
 import type { RefObject } from 'react';
 import { useMemo, useRef, useState } from 'react';
 import ItemGrantModal from '@/components/ItemGrantModal';
-import { ITEM_TYPE_CODES, WEAPON_SUBTYPE_CODES } from '@/data/game/item-types';
+import {
+  CARD_SUBTYPE_CODES,
+  EQUIP_SLOT_CODES,
+  ITEM_TYPE_CODES,
+  SUBTYPE_FILTER_TYPES,
+  WEAPON_SUBTYPE_CODES,
+} from '@/data/game/item-types';
 import {
   type GameDataItem,
   getItem,
@@ -34,16 +40,49 @@ function itemTypeLabel(type: string | undefined, t: Translate): string {
   return type ? t(`gameData.item.type.${type.toLowerCase()}`, type) : '-';
 }
 
-function weaponSubtypeLabel(
+function hasSubtypeFilter(type: string | undefined): boolean {
+  return SUBTYPE_FILTER_TYPES.includes(
+    type as (typeof SUBTYPE_FILTER_TYPES)[number],
+  );
+}
+
+function subtypeCodes(type: string | undefined): readonly string[] {
+  if (type === 'Weapon') {
+    return WEAPON_SUBTYPE_CODES;
+  }
+  if (type === 'Armor') {
+    return EQUIP_SLOT_CODES;
+  }
+  if (type === 'Card') {
+    return CARD_SUBTYPE_CODES;
+  }
+  return [];
+}
+
+function subtypeMessageId(type: string | undefined, subtype: string): string {
+  const key = subtype.toLowerCase();
+  if (type === 'Weapon') {
+    return `gameData.item.weaponSubtype.${key}`;
+  }
+  if (type === 'Ammo') {
+    return `gameData.item.ammoSubtype.${key}`;
+  }
+  if (type === 'Card' && key === 'enchant') {
+    return 'gameData.item.cardSubtype.enchant';
+  }
+  return `gameData.item.equipSlot.${key}`;
+}
+
+function subtypeLabel(
   subtype: string | number | undefined,
+  type: string | undefined,
   t: Translate,
 ): string {
-  return subtype
-    ? t(
-        `gameData.item.weaponSubtype.${String(subtype).toLowerCase()}`,
-        String(subtype),
-      )
-    : '-';
+  if (!subtype) {
+    return '-';
+  }
+  const value = String(subtype);
+  return t(subtypeMessageId(type, value), value);
 }
 
 function sourceLabel(source: GameDataItem['source'], t: Translate): string {
@@ -111,16 +150,16 @@ function useItemColumns({
         ),
         render: (_, row) => itemTypeLabel(row.Type, t),
       },
-      ...(selectedItemType === 'Weapon'
+      ...(hasSubtypeFilter(selectedItemType)
         ? [
             {
-              title: t('gameData.item.weaponSubtype', '武器类型'),
+              title: t('gameData.item.subtype', '子类'),
               dataIndex: 'subtype',
               hideInTable: true,
               valueEnum: Object.fromEntries(
-                WEAPON_SUBTYPE_CODES.map((subtype) => [
+                subtypeCodes(selectedItemType).map((subtype) => [
                   subtype,
-                  weaponSubtypeLabel(subtype, t),
+                  subtypeLabel(subtype, selectedItemType, t),
                 ]),
               ),
             },
@@ -213,9 +252,7 @@ export default function Items() {
           onValuesChange: (changedValues) => {
             if ('type' in changedValues) {
               setSelectedItemType(changedValues.type);
-              if (changedValues.type !== 'Weapon') {
-                formRef.current?.setFieldValue('subtype', undefined);
-              }
+              formRef.current?.setFieldValue('subtype', undefined);
             }
           },
         }}
@@ -276,10 +313,8 @@ function ItemDetails({
           <Tag>{itemTypeLabel(item.Type, t)}</Tag>
         </Descriptions.Item>
         {item.SubType && (
-          <Descriptions.Item
-            label={t('gameData.item.weaponSubtype', '武器类型')}
-          >
-            <Tag>{weaponSubtypeLabel(item.SubType, t)}</Tag>
+          <Descriptions.Item label={t('gameData.item.subtype', '子类')}>
+            <Tag>{subtypeLabel(item.SubType, item.Type, t)}</Tag>
           </Descriptions.Item>
         )}
         <Descriptions.Item label={t('gameData.item.source', '数据来源')}>
