@@ -39,7 +39,7 @@ export const WEAPON_SUBTYPE_CODES = [
   'Grenade',
 ] as const;
 
-export const EQUIP_SLOT_CODES = [
+export const ARMOR_SLOT_CODES = [
   'Head_Top',
   'Head_Mid',
   'Head_Low',
@@ -56,10 +56,14 @@ export const EQUIP_SLOT_CODES = [
   'Costume_Head_Low',
   'Costume_Head',
   'Costume_Garment',
+] as const;
+
+export const CARD_SLOT_CODES = [
+  ...ARMOR_SLOT_CODES,
   'Weapon',
   'Any',
 ] as const;
 
-export const CARD_SUBTYPE_CODES = ['Enchant', ...EQUIP_SLOT_CODES] as const;
+export const CARD_SUBTYPE_CODES = ['Enchant', ...CARD_SLOT_CODES] as const;
 
 export const SUBTYPE_FILTER_TYPES = ['Weapon', 'Armor', 'Card'] as const;

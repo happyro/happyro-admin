@@ -11,8 +11,8 @@ import type { RefObject } from 'react';
 import { useMemo, useRef, useState } from 'react';
 import ItemGrantModal from '@/components/ItemGrantModal';
 import {
+  ARMOR_SLOT_CODES,
   CARD_SUBTYPE_CODES,
-  EQUIP_SLOT_CODES,
   ITEM_TYPE_CODES,
   SUBTYPE_FILTER_TYPES,
   WEAPON_SUBTYPE_CODES,
@@ -51,7 +51,7 @@ function subtypeCodes(type: string | undefined): readonly string[] {
     return WEAPON_SUBTYPE_CODES;
   }
   if (type === 'Armor') {
-    return EQUIP_SLOT_CODES;
+    return ARMOR_SLOT_CODES;
   }
   if (type === 'Card') {
     return CARD_SUBTYPE_CODES;
