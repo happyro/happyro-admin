@@ -30,6 +30,12 @@ export default [
         component: './operations/item-grants',
       },
       {
+        path: '/operations/zeny-grants',
+        name: 'zenyGrants',
+        access: 'canGrantItems',
+        component: './operations/zeny-grants',
+      },
+      {
         path: '/operations/item-grant-records',
         name: 'itemGrantRecords',
         access: 'canGrantItems',
