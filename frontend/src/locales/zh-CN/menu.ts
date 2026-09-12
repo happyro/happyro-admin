@@ -16,7 +16,7 @@ export default {
   'menu.settings.gameData': '游戏资料',
   'menu.settings.gameSettings': '游戏设置',
   'menu.settings.gameSettingHistory': '配置修改记录',
-  'menu.welcome': '欢迎',
+  'menu.welcome': '首页',
   'menu.more-blocks': '更多区块',
   'menu.home': '首页',
   'menu.admin': '管理页',

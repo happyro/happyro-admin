@@ -1,5 +1,11 @@
 export default [
   {
+    path: '/welcome',
+    name: 'welcome',
+    icon: 'home',
+    component: './Welcome',
+  },
+  {
     path: '/game-data',
     name: 'gameData',
     icon: 'database',
@@ -102,12 +108,6 @@ export default [
         redirect: '/user/login',
       },
     ],
-  },
-  {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'home',
-    component: './Welcome',
   },
   {
     path: '/',
