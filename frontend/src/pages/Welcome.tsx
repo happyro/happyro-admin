@@ -41,7 +41,7 @@ export default function Welcome() {
 
   return (
     <PageContainer
-      title={<span className="welcome-page-title">HappyRO 管理后台</span>}
+      title={<span className="welcome-page-title">首页</span>}
     >
       <div className="welcome-page">
         <Card title="欢迎回来">
