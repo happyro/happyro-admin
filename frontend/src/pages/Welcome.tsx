@@ -40,17 +40,20 @@ export default function Welcome() {
   );
 
   return (
-    <PageContainer
-      title={<span className="welcome-page-title">首页</span>}
-    >
+    <PageContainer title={<span className="welcome-page-title">首页</span>}>
       <div className="welcome-page">
-        <Card title="欢迎回来">
-          <Typography.Paragraph type="secondary">
-            从游戏资料到玩家服务，在这里完成 HappyRO 的日常管理。
-          </Typography.Paragraph>
+        <Card title="概览">
           <Typography.Paragraph>
             查询资料与玩家信息，选择目标角色执行运营操作，或按需调整游戏设置。
           </Typography.Paragraph>
+          <div className="welcome-version-labels">
+            <Typography.Text type="secondary">
+              客户端资源 <Typography.Text code>kro-20211105</Typography.Text>
+            </Typography.Text>
+            <Typography.Text type="secondary">
+              服务端版本 <Typography.Text code>2fe6ab3dc4</Typography.Text>
+            </Typography.Text>
+          </div>
         </Card>
         <Card title="常用入口">
           {availableEntries.length ? (
