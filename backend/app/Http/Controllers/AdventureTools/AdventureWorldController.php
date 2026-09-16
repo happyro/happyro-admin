@@ -31,6 +31,7 @@ final class AdventureWorldController
         $result = $this->npcs->search(new NpcQuery(
             query: $data['query'] ?? null,
             onMap: $data['onMap'] ?? null,
+            currentMap: $data['currentMap'] ?? null,
             gameVisibleOnly: true,
             page: $data['page'] ?? 1,
             perPage: $data['perPage'] ?? 32,

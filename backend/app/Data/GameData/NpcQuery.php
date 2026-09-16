@@ -17,6 +17,7 @@ final readonly class NpcQuery
         public ?string $name = null,
         public ?string $displayName = null,
         public ?string $onMap = null,
+        public ?string $currentMap = null,
         public bool $gameVisibleOnly = true,
         public int $page = 1,
         public int $perPage = 20,

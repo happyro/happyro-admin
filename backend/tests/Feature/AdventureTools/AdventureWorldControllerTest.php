@@ -86,6 +86,48 @@ final class AdventureWorldControllerTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.map', 'izlude');
     }
 
+    public function test_npc_search_matches_number_and_navigation_alias_and_prioritizes_current_map(): void
+    {
+        $catalog = GameDataCatalog::factory()->create(['resource_type' => 'npcs']);
+        GameNpc::factory()->create([
+            'game_data_catalog_id' => $catalog->id, 'npc_key' => 'iz_int:56:32:Swordsman',
+            'map' => 'iz_int', 'display_name' => '受伤的剑士', 'payload' => ['navigation' => ['class' => 687]],
+        ]);
+        GameNpc::factory()->create([
+            'game_data_catalog_id' => $catalog->id, 'npc_key' => 'prontera:1:1:A',
+            'display_name' => '卡普拉', 'catalog_order' => 0,
+            'payload' => ['navigation' => ['name' => '카프라 직원', 'class' => 112]],
+        ]);
+        GameNpc::factory()->create([
+            'game_data_catalog_id' => $catalog->id, 'npc_key' => 'geffen:1:1:B',
+            'map' => 'geffen', 'display_name' => '卡普拉', 'catalog_order' => 99,
+            'payload' => ['navigation' => ['name' => '카프라 직원', 'class' => 112]],
+        ]);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?query=687')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.display_name', '受伤的剑士');
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?query=Kafra&currentMap=geffen&perPage=1')
+            ->assertOk()->assertJsonPath('total', 2)->assertJsonPath('data.0.map', 'geffen');
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?query=不存在的名字')
+            ->assertOk()->assertJsonPath('total', 0)->assertJsonCount(0, 'data');
+    }
+
+    public function test_navigation_alias_exact_match_precedes_name_substring_match(): void
+    {
+        $catalog = GameDataCatalog::factory()->create(['resource_type' => 'npcs']);
+        GameNpc::factory()->create([
+            'game_data_catalog_id' => $catalog->id, 'npc_key' => 'alias',
+            'display_name' => '卡普拉', 'payload' => ['navigation' => ['name' => '카프라 직원']],
+        ]);
+        GameNpc::factory()->create([
+            'game_data_catalog_id' => $catalog->id, 'npc_key' => 'substring',
+            'display_name' => 'A Kafra employee',
+        ]);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?query=Kafra&perPage=1')
+            ->assertOk()->assertJsonPath('total', 2)->assertJsonPath('data.0.id', 'alias');
+    }
+
     public function test_world_catalogs_require_a_game_session(): void
     {
         $this->getJson('/api/adventure-tools/npcs')->assertUnauthorized();

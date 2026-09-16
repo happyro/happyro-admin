@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 final class DatabaseNpcRepository implements NpcRepository
 {
     /** @var list<string> Columns the frontend ranks a search term against. */
-    private const SEARCHABLE = ['display_name', 'source_name', 'name', 'map_name_zh_cn', 'map'];
+    private const SEARCHABLE = ['display_name', 'source_name', 'name', 'map_name_zh_cn', 'map', 'payload->navigation->name', 'payload->navigation->class'];
 
     public function search(NpcQuery $query): array
     {
@@ -63,21 +63,35 @@ final class DatabaseNpcRepository implements NpcRepository
     private function ordered(Builder $builder, NpcQuery $query): Builder
     {
         $term = mb_strtolower(trim((string) ($query->displayName ?: $query->name ?: $query->map ?: $query->query)));
+        if ($query->currentMap && ($term !== '' || $query->onMap)) {
+            $builder->orderByRaw('CASE WHEN map = ? THEN 0 ELSE 1 END', [$this->normalizeMap($query->currentMap)]);
+        }
         if ($term === '') {
             return $builder->orderBy('catalog_order');
         }
         $escaped = $this->escape($term);
-        $exact = implode(' OR ', array_map(static fn (string $column): string => "LOWER({$column}) = ?", self::SEARCHABLE));
-        $prefix = implode(' OR ', array_map(static fn (string $column): string => "LOWER({$column}) LIKE ?", self::SEARCHABLE));
-        $contains = $prefix;
-        $bindings = [
-            ...array_fill(0, count(self::SEARCHABLE), $term),
-            ...array_fill(0, count(self::SEARCHABLE), $escaped.'%'),
-            ...array_fill(0, count(self::SEARCHABLE), '%'.$escaped.'%'),
-        ];
+        $columns = array_map($builder->getQuery()->getGrammar()->wrap(...), self::SEARCHABLE);
+        $clauses = [];
+        $bindings = [];
+        $aliases = $this->searchAliases();
+        $navigationName = $builder->getQuery()->getGrammar()->wrap('payload->navigation->name');
+        foreach ([$term, $escaped.'%', '%'.$escaped.'%'] as $rank => $pattern) {
+            $operator = $rank === 0 ? '=' : 'LIKE';
+            $matches = array_map(static fn (string $column): string => "LOWER({$column}) {$operator} ?", $columns);
+            array_push($bindings, ...array_fill(0, count($columns), $pattern));
+            foreach ($aliases as $alias => $source) {
+                $alias = mb_strtolower($alias);
+                $aliasRank = $alias === $term ? 0 : (str_starts_with($alias, $term) ? 1 : 2);
+                if ($aliasRank === $rank && str_contains($alias, $term)) {
+                    $matches[] = "LOWER({$navigationName}) LIKE ?";
+                    $bindings[] = '%'.$this->escape(mb_strtolower($source)).'%';
+                }
+            }
+            $clauses[] = 'WHEN '.implode(' OR ', $matches)." THEN {$rank}";
+        }
 
         return $builder
-            ->orderByRaw("CASE WHEN {$exact} THEN 0 WHEN {$prefix} THEN 1 WHEN {$contains} THEN 2 ELSE 3 END", $bindings)
+            ->orderByRaw('CASE '.implode(' ', $clauses).' ELSE 3 END', $bindings)
             ->orderBy('display_name')
             ->orderBy('catalog_order');
     }
@@ -86,13 +100,24 @@ final class DatabaseNpcRepository implements NpcRepository
     {
         $escaped = $this->escape($value);
 
-        return $builder->where(function (Builder $match) use ($escaped): void {
+        return $builder->where(function (Builder $match) use ($escaped, $value): void {
             foreach (self::SEARCHABLE as $index => $column) {
                 $index === 0
                     ? $match->where($column, 'like', "%{$escaped}%")
                     : $match->orWhere($column, 'like', "%{$escaped}%");
             }
+            foreach ($this->searchAliases() as $alias => $source) {
+                if (str_contains(mb_strtolower($alias), mb_strtolower($value))) {
+                    $match->orWhere('payload->navigation->name', 'like', '%'.$this->escape($source).'%');
+                }
+            }
         });
+    }
+
+    /** @return array<string, string> */
+    private function searchAliases(): array
+    {
+        return json_decode((string) file_get_contents(resource_path('game-data/world/npc-search-aliases.json')), true)['aliases'];
     }
 
     private function escape(string $value): string
