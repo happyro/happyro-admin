@@ -2,12 +2,13 @@ import {
   PageContainer,
   ProForm,
   ProFormDigit,
+  type ProFormInstance,
   ProFormRadio,
   ProFormText,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
 import { App, Card, Flex, Spin, Tabs, Typography } from 'antd';
-import { type CSSProperties, useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import {
   type GameSettingDefinition,
   type GameSettings,
@@ -15,7 +16,11 @@ import {
   updateGameSettings,
 } from '@/services/settings/game-settings';
 
-type Translate = (id: string, fallback: string) => string;
+type Translate = (
+  id: string,
+  fallback: string,
+  values?: Record<string, string | number>,
+) => string;
 
 const normalDropRateKeys = [
   'item_rate_common',
@@ -54,6 +59,28 @@ function toStoredValue(
   return isRate(definition) ? Math.round(value * 100) : value;
 }
 
+function formatDisplayNumber(value: number | string | undefined): string {
+  if (value === undefined || value === null || value === '') {
+    return '';
+  }
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return '';
+  }
+  return String(Number(numeric.toFixed(2)));
+}
+
+function displayValues(settings: GameSettings): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(settings.values).map(([key, value]) => [
+      key,
+      settings.definitions[key]
+        ? toDisplayValue(value, settings.definitions[key])
+        : value,
+    ]),
+  );
+}
+
 function ruleExtra(definition: GameSettingDefinition, t: Translate) {
   return (
     <Flex gap={8} wrap>
@@ -61,8 +88,8 @@ function ruleExtra(definition: GameSettingDefinition, t: Translate) {
         {t('settings.gameSettings.source', '来源')}: {definition.source}
       </Typography.Text>
       <Typography.Text type="secondary">
-        {toDisplayValue(definition.minimum, definition)} -{' '}
-        {toDisplayValue(definition.maximum, definition)}
+        {formatDisplayNumber(toDisplayValue(definition.minimum, definition))} -{' '}
+        {formatDisplayNumber(toDisplayValue(definition.maximum, definition))}
       </Typography.Text>
     </Flex>
   );
@@ -81,8 +108,10 @@ export default function GameSettingsPage() {
   const intl = useIntl();
   const { message } = App.useApp();
   const [settings, setSettings] = useState<GameSettings>();
-  const t = (id: string, fallback: string) =>
-    intl.formatMessage({ id, defaultMessage: fallback });
+  const [activeTab, setActiveTab] = useState('experience');
+  const formRef = useRef<ProFormInstance>();
+  const t: Translate = (id, fallback, values) =>
+    intl.formatMessage({ id, defaultMessage: fallback }, values);
 
   useEffect(() => {
     getGameSettings()
@@ -94,16 +123,7 @@ export default function GameSettingsPage() {
       );
   }, []);
 
-  const initialValues = settings
-    ? Object.fromEntries(
-        Object.entries(settings.values).map(([key, value]) => [
-          key,
-          settings.definitions[key]
-            ? toDisplayValue(value, settings.definitions[key])
-            : value,
-        ]),
-      )
-    : undefined;
+  const initialValues = settings ? displayValues(settings) : undefined;
 
   return (
     <PageContainer title={t('settings.gameSettings.title', '游戏设置')}>
@@ -112,7 +132,7 @@ export default function GameSettingsPage() {
           <Spin />
         ) : (
           <ProForm
-            key={JSON.stringify(settings.values)}
+            formRef={formRef}
             initialValues={initialValues}
             submitter={{
               searchConfig: { submitText: t('common.save', '保存') },
@@ -136,6 +156,7 @@ export default function GameSettingsPage() {
               });
               const { data } = await getGameSettings();
               setSettings(data);
+              formRef.current?.setFieldsValue(displayValues(data));
               message.success(
                 t('settings.gameSettings.saved', '游戏设置已保存'),
               );
@@ -143,7 +164,8 @@ export default function GameSettingsPage() {
             }}
           >
             <Tabs
-              defaultActiveKey="experience"
+              activeKey={activeTab}
+              onChange={setActiveTab}
               items={[
                 {
                   key: 'experience',
@@ -243,18 +265,50 @@ function RateField({
   definition: GameSettingDefinition;
   t: Translate;
 }) {
+  const minimum = toDisplayValue(definition.minimum, definition);
+  const maximum = toDisplayValue(definition.maximum, definition);
   return (
     <ProFormDigit
       name={name}
       label={ruleLabel(name, t)}
-      min={toDisplayValue(definition.minimum, definition)}
-      max={toDisplayValue(definition.maximum, definition)}
-      fieldProps={{ precision: 2, step: 0.01, min: 0 }}
+      fieldProps={{
+        step: 0.01,
+        formatter: (value, info) =>
+          info.userTyping ? info.input : formatDisplayNumber(value),
+        parser: (value) => Number(String(value ?? '').replace(/,/g, '')),
+      }}
       extra={ruleExtra(definition, t)}
       width="md"
-      rules={[{ required: true }]}
+      rules={rangeRules(minimum, maximum, t)}
     />
   );
+}
+
+function rangeRules(minimum: number, maximum: number, t: Translate) {
+  return [
+    { required: true },
+    {
+      validator: async (_: unknown, value: unknown) => {
+        const numeric = Number(value);
+        if (
+          !Number.isFinite(numeric) ||
+          numeric < minimum ||
+          numeric > maximum
+        ) {
+          throw new Error(
+            t(
+              'settings.gameSettings.range',
+              '请输入 {min} 到 {max} 之间的数值',
+              {
+                min: formatDisplayNumber(minimum),
+                max: formatDisplayNumber(maximum),
+              },
+            ),
+          );
+        }
+      },
+    },
+  ];
 }
 
 function PolicyOptions({ t }: { t: Translate }) {
@@ -298,13 +352,15 @@ function NavigationSettings({
       <ProFormDigit
         name="navigation_teleport_cooldown"
         label={ruleLabel('navigation_teleport_cooldown', t)}
-        min={settings.definitions.navigation_teleport_cooldown.minimum}
-        max={settings.definitions.navigation_teleport_cooldown.maximum}
         fieldProps={{ precision: 0 }}
         addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
         extra={ruleExtra(settings.definitions.navigation_teleport_cooldown, t)}
         width="md"
-        rules={[{ required: true }]}
+        rules={rangeRules(
+          settings.definitions.navigation_teleport_cooldown.minimum,
+          settings.definitions.navigation_teleport_cooldown.maximum,
+          t,
+        )}
       />
       <ProFormRadio.Group
         name="navigation_map_channels_enabled"
@@ -347,13 +403,15 @@ function MonsterSpawnSettings({
           key={key}
           name={key}
           label={ruleLabel(key, t)}
-          min={settings.definitions[key].minimum}
-          max={settings.definitions[key].maximum}
           fieldProps={{ precision: 0 }}
           addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
           extra={ruleExtra(settings.definitions[key], t)}
           width="md"
-          rules={[{ required: true }]}
+          rules={rangeRules(
+            settings.definitions[key].minimum,
+            settings.definitions[key].maximum,
+            t,
+          )}
         />
       ))}
       <ProFormRadio.Group

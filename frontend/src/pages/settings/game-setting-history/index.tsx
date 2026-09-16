@@ -13,7 +13,10 @@ type Revision = {
 };
 
 function formatChange(key: string, value: number): string {
-  return key.includes('_rate') ? (value / 100).toFixed(2) : String(value);
+  if (!key.includes('_rate')) {
+    return String(value);
+  }
+  return String(Number((value / 100).toFixed(2)));
 }
 
 export default function GameSettingHistory() {

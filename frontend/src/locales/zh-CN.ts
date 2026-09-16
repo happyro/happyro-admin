@@ -22,6 +22,7 @@ export default {
   'common.createdAt': '创建时间',
   'settings.gameSettings.loadFailed': '游戏设置加载失败',
   'settings.gameSettings.saved': '游戏设置已保存',
+  'settings.gameSettings.range': '请输入 {min} 到 {max} 之间的数值',
   'settings.gameSettings.remark': '修改备注',
   'settings.gameSettings.source': '来源',
   'settings.gameSettings.unit.seconds': '秒',
