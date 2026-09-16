@@ -1,0 +1,92 @@
+<?php
+
+namespace Tests\Feature\AdventureTools;
+
+use App\Contracts\GameServer\GameServerGateway;
+use App\Models\GameDataCatalog;
+use App\Models\GameNpc;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
+
+final class AdventureWorldControllerTest extends TestCase
+{
+    use LazilyRefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['database.connections.game' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]);
+        DB::purge('game');
+        Schema::connection('game')->create('login', function (Blueprint $table): void {
+            $table->integer('account_id')->primary();
+            $table->integer('group_id')->default(0);
+            $table->string('web_auth_token')->nullable();
+            $table->integer('web_auth_token_enabled')->default(0);
+        });
+        Schema::connection('game')->create('char', function (Blueprint $table): void {
+            $table->integer('char_id')->primary();
+            $table->integer('account_id');
+            $table->integer('online')->default(0);
+        });
+        DB::connection('game')->table('login')->insert(['account_id' => 2000001, 'group_id' => 0, 'web_auth_token' => 'token', 'web_auth_token_enabled' => 1]);
+        DB::connection('game')->table('char')->insert(['char_id' => 150002, 'account_id' => 2000001, 'online' => 1]);
+    }
+
+    public function test_npc_catalog_is_paginated_and_hides_invisible_npcs(): void
+    {
+        $catalog = GameDataCatalog::factory()->create(['resource_type' => 'npcs']);
+        GameNpc::factory()->count(40)->create(['game_data_catalog_id' => $catalog->id]);
+        GameNpc::factory()->create(['game_data_catalog_id' => $catalog->id, 'npc_key' => 'prontera:9:9:Hidden', 'game_visible' => false]);
+
+        $response = $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?perPage=32');
+
+        $response->assertOk()->assertJsonPath('total', 40)->assertJsonCount(32, 'data');
+    }
+
+    public function test_npc_catalog_can_be_scoped_to_the_current_map(): void
+    {
+        $catalog = GameDataCatalog::factory()->create(['resource_type' => 'npcs']);
+        GameNpc::factory()->create(['game_data_catalog_id' => $catalog->id, 'npc_key' => 'prontera:1:1:A']);
+        GameNpc::factory()->create(['game_data_catalog_id' => $catalog->id, 'npc_key' => 'izlude:1:1:B', 'map' => 'izlude']);
+        GameNpc::factory()->create(['game_data_catalog_id' => $catalog->id, 'npc_key' => 'izlude_a:1:1:C', 'map' => 'izlude_a']);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/npcs?onMap=izlude')
+            ->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.map', 'izlude');
+    }
+
+    public function test_map_npcs_returns_the_whole_map_for_preview_markers(): void
+    {
+        $catalog = GameDataCatalog::factory()->create(['resource_type' => 'npcs']);
+        GameNpc::factory()->count(5)->create(['game_data_catalog_id' => $catalog->id]);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/maps/prontera/npcs')
+            ->assertOk()->assertJsonPath('total', 5)->assertJsonCount(5, 'data');
+    }
+
+    public function test_map_catalog_is_paginated_and_searchable(): void
+    {
+        $this->mock(GameServerGateway::class)->shouldReceive('battleConfig')->andReturn(['navigation_map_channels_enabled' => 0]);
+
+        $response = $this->withHeaders($this->headers())->getJson('/api/adventure-tools/maps?perPage=35');
+        $response->assertOk()->assertJsonCount(35, 'data');
+        $this->assertGreaterThan(35, $response->json('total'));
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/maps?query=prontera')
+            ->assertOk()->assertJsonPath('data.0.map', 'prontera');
+    }
+
+    public function test_world_catalogs_require_a_game_session(): void
+    {
+        $this->getJson('/api/adventure-tools/npcs')->assertUnauthorized();
+        $this->getJson('/api/adventure-tools/maps')->assertUnauthorized();
+    }
+
+    /** @return array<string, string> */
+    private function headers(): array
+    {
+        return ['X-HappyRO-Account-ID' => '2000001', 'X-HappyRO-Character-ID' => '150002', 'X-HappyRO-Auth-Token' => 'token'];
+    }
+}

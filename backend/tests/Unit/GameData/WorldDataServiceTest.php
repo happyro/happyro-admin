@@ -2,7 +2,9 @@
 
 namespace Tests\Unit\GameData;
 
+use App\Data\GameData\MapQuery;
 use App\Services\GameData\WorldDataService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -10,7 +12,7 @@ final class WorldDataServiceTest extends TestCase
 {
     public function test_empty_map_placeholder_is_not_exposed_as_an_image(): void
     {
-        $maps = collect((new WorldDataService)->maps())->keyBy('map');
+        $maps = collect($this->service()->maps($this->mapQuery(gameOnly: false, perPage: 5000))['data'])->keyBy('map');
 
         $this->assertSame('terrain', $maps->get('alb_ship')['image_kind']);
         $this->assertNotNull($maps->get('alb_ship')['image']);
@@ -19,61 +21,86 @@ final class WorldDataServiceTest extends TestCase
         $this->assertNotNull($maps->get('1@nyd'));
     }
 
-    public function test_reads_maps_and_shared_npc_catalog_metadata(): void
+    public function test_well_known_towns_are_ordered_first(): void
+    {
+        $maps = array_column($this->service()->maps($this->mapQuery(perPage: 3))['data'], 'map');
+
+        $this->assertSame(['prontera', 'prt_fild08', 'izlude'], $maps);
+    }
+
+    public function test_maps_are_paginated_and_filtered_on_the_server(): void
+    {
+        $service = $this->service();
+
+        $all = $service->maps($this->mapQuery(perPage: 100));
+        $page = $service->maps($this->mapQuery(page: 2, perPage: 10));
+        $this->assertCount(10, $page['data']);
+        $this->assertSame($all['total'], $page['total']);
+        $this->assertSame(array_slice(array_column($all['data'], 'map'), 10, 10), array_column($page['data'], 'map'));
+
+        $filtered = $service->maps($this->mapQuery(map: 'prt_fild', perPage: 100));
+        $this->assertGreaterThan(0, $filtered['total']);
+        foreach ($filtered['data'] as $row) {
+            $this->assertStringContainsString('prt_fild', $row['map']);
+        }
+    }
+
+    public function test_reads_the_server_map_index(): void
     {
         $root = storage_path('framework/testing/world-data');
         File::deleteDirectory($root);
         File::ensureDirectoryExists($root);
         File::put($root.'/map_index.txt', "prontera 0\n// comment\nprt_fild01\nnew_1-1\n1@nyd\n");
-        File::put($root.'/npc-catalog.json', json_encode([
-            'schema' => 'happyro-npc-catalog/v1',
-            'entries' => [[
-                'id' => 'prontera:100:101:Guide Keeper#01',
-                'map' => 'prontera',
-                'map_name_zh_cn' => '普隆德拉',
-                'x' => 100,
-                'y' => 101,
-                'name' => 'Guide Keeper#01',
-                'source_name' => 'Guide Keeper',
-                'display_name' => '向导',
-                'type' => 'script',
-                'sprite_id' => 419,
-                'display_sprite_id' => 419,
-                'enabled' => true,
-                'game_visible' => true,
-                'catalog_order' => 0,
-                'navigation' => ['id' => 10, 'class' => 419],
-                'source' => ['path' => 'npc/test.txt', 'line' => 7],
-            ]],
-        ], JSON_THROW_ON_ERROR));
-        File::put($root.'/maps-placeholder', '');
-        config([
-            'happyro.game_data.map_index_path' => $root.'/map_index.txt',
-            'happyro.game_data.npc_catalog_path' => $root.'/npc-catalog.json',
-        ]);
+        config(['happyro.game_data.map_index_path' => $root.'/map_index.txt']);
 
-        $service = new WorldDataService;
+        $maps = array_column($this->service()->maps($this->mapQuery(gameOnly: false, perPage: 100))['data'], 'map');
 
-        $this->assertSame(['prontera', 'prt_fild01', 'new_1-1', '1@nyd'], array_column($service->maps(), 'map'));
-        $npc = $service->npcs()[0];
-        $this->assertSame('Guide Keeper#01', $npc['name']);
-        $this->assertSame('向导', $npc['name_zh_cn']);
-        $this->assertSame(419, $npc['sprite_id']);
-        $this->assertTrue($npc['game_visible']);
-        $this->assertSame(0, $npc['catalog_order']);
-        $this->assertSame('npc/test.txt', $npc['source']['path']);
+        sort($maps);
+        $this->assertSame(['1@nyd', 'new_1-1', 'prontera', 'prt_fild01'], $maps);
 
         File::deleteDirectory($root);
     }
 
-    public function test_returns_no_npcs_for_an_invalid_catalog(): void
+    public function test_the_merged_catalog_is_rebuilt_when_the_map_index_changes(): void
     {
-        $path = storage_path('framework/testing/invalid-npc-catalog.json');
-        File::put($path, '{"schema":"unsupported"}');
-        config(['happyro.game_data.npc_catalog_path' => $path]);
+        $root = storage_path('framework/testing/world-data-cache');
+        File::deleteDirectory($root);
+        File::ensureDirectoryExists($root);
+        $index = $root.'/map_index.txt';
+        File::put($index, "prontera 0\n");
+        config(['happyro.game_data.map_index_path' => $index]);
+        Cache::flush();
 
-        $this->assertSame([], (new WorldDataService)->npcs());
+        $this->assertSame(['prontera'], array_column($this->service()->maps($this->mapQuery(gameOnly: false))['data'], 'map'));
 
-        File::delete($path);
+        File::put($index, "prontera 0\ngeffen 1\n");
+        touch($index, time() + 5);
+
+        $this->assertSame(
+            ['prontera', 'geffen'],
+            array_column($this->service()->maps($this->mapQuery(gameOnly: false))['data'], 'map'),
+        );
+
+        File::deleteDirectory($root);
+    }
+
+    private function service(): WorldDataService
+    {
+        return app(WorldDataService::class);
+    }
+
+    private function mapQuery(
+        bool $gameOnly = true,
+        ?string $map = null,
+        int $page = 1,
+        int $perPage = 20,
+    ): MapQuery {
+        return new MapQuery(
+            gameOnly: $gameOnly,
+            channelsEnabled: false,
+            map: $map,
+            page: $page,
+            perPage: $perPage,
+        );
     }
 }
