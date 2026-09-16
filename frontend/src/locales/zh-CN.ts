@@ -23,7 +23,6 @@ export default {
   'settings.gameSettings.loadFailed': '游戏设置加载失败',
   'settings.gameSettings.saved': '游戏设置已保存',
   'settings.gameSettings.range': '请输入 {min} 到 {max} 之间的数值',
-  'settings.gameSettings.source': '来源',
   'settings.gameSettings.unit.seconds': '秒',
   'settings.gameSettings.key.navigation_teleport_policy': '开放范围',
   'settings.gameSettings.key.navigation_teleport_cross_map': '允许跨地图传送',

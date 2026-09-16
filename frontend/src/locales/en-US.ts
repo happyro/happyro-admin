@@ -22,7 +22,6 @@ export default {
   'settings.gameSettings.loadFailed': 'Failed to load game settings',
   'settings.gameSettings.saved': 'Game settings saved',
   'settings.gameSettings.range': 'Enter a value between {min} and {max}',
-  'settings.gameSettings.source': 'Source',
   'settings.gameSettings.unit.seconds': 'seconds',
   'settings.gameSettings.key.navigation_teleport_policy': 'Availability',
   'settings.gameSettings.key.navigation_teleport_cross_map':

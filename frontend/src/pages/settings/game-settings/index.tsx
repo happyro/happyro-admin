@@ -6,7 +6,7 @@ import {
   ProFormRadio,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { App, Card, Flex, Spin, Tabs, Typography } from 'antd';
+import { App, Card, Spin, Tabs, Typography } from 'antd';
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import {
   type GameSettingDefinition,
@@ -80,17 +80,12 @@ function displayValues(settings: GameSettings): Record<string, number> {
   );
 }
 
-function ruleExtra(definition: GameSettingDefinition, t: Translate) {
+function ruleExtra(definition: GameSettingDefinition) {
   return (
-    <Flex gap={8} wrap>
-      <Typography.Text type="secondary">
-        {t('settings.gameSettings.source', '来源')}: {definition.source}
-      </Typography.Text>
-      <Typography.Text type="secondary">
-        {formatDisplayNumber(toDisplayValue(definition.minimum, definition))} -{' '}
-        {formatDisplayNumber(toDisplayValue(definition.maximum, definition))}
-      </Typography.Text>
-    </Flex>
+    <Typography.Text type="secondary">
+      {formatDisplayNumber(toDisplayValue(definition.minimum, definition))} -{' '}
+      {formatDisplayNumber(toDisplayValue(definition.maximum, definition))}
+    </Typography.Text>
   );
 }
 
@@ -270,7 +265,7 @@ function RateField({
           info.userTyping ? info.input : formatDisplayNumber(value),
         parser: (value) => Number(String(value ?? '').replace(/,/g, '')),
       }}
-      extra={ruleExtra(definition, t)}
+      extra={ruleExtra(definition)}
       width="md"
       rules={rangeRules(minimum, maximum, t)}
     />
@@ -347,7 +342,7 @@ function NavigationSettings({
         label={ruleLabel('navigation_teleport_cooldown', t)}
         fieldProps={{ precision: 0 }}
         addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
-        extra={ruleExtra(settings.definitions.navigation_teleport_cooldown, t)}
+        extra={ruleExtra(settings.definitions.navigation_teleport_cooldown)}
         width="md"
         rules={rangeRules(
           settings.definitions.navigation_teleport_cooldown.minimum,
@@ -362,7 +357,6 @@ function NavigationSettings({
         options={BinaryOptions({ t })}
         extra={ruleExtra(
           settings.definitions.navigation_map_channels_enabled,
-          t,
         )}
         rules={[{ required: true }]}
       />
@@ -398,7 +392,7 @@ function MonsterSpawnSettings({
           label={ruleLabel(key, t)}
           fieldProps={{ precision: 0 }}
           addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
-          extra={ruleExtra(settings.definitions[key], t)}
+          extra={ruleExtra(settings.definitions[key])}
           width="md"
           rules={rangeRules(
             settings.definitions[key].minimum,
