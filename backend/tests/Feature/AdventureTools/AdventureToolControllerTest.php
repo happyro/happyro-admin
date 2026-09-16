@@ -123,8 +123,7 @@ final class AdventureToolControllerTest extends TestCase
         $this->withHeaders($this->headers())->putJson('/api/adventure-tools/game-settings', [
             'changes' => ['game_tools_game_settings_policy' => 1],
         ])->assertUnprocessable()
-            ->assertJsonValidationErrors('changes')
-            ->assertJsonMissingValidationErrors('remark');
+            ->assertJsonValidationErrors('changes');
     }
 
     public function test_accepts_skill_points_above_the_current_job_level(): void

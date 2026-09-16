@@ -4,7 +4,6 @@ import {
   ProFormDigit,
   type ProFormInstance,
   ProFormRadio,
-  ProFormText,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
 import { App, Card, Flex, Spin, Tabs, Typography } from 'antd';
@@ -149,10 +148,8 @@ export default function GameSettingsPage() {
                     ),
                   ]),
               );
-              const remark = String(values.remark ?? '').trim();
               await updateGameSettings({
                 changes,
-                ...(remark ? { remark } : {}),
               });
               const { data } = await getGameSettings();
               setSettings(data);
@@ -196,11 +193,7 @@ export default function GameSettingsPage() {
                 },
               ]}
             />
-            <ProFormText
-              name="remark"
-              label={t('settings.gameSettings.remark', '修改备注')}
-              width="md"
-            />
+
           </ProForm>
         )}
       </Card>

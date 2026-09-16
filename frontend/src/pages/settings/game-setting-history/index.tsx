@@ -5,7 +5,6 @@ import { Flex, Tag, Typography } from 'antd';
 type Revision = {
   id: number;
   revision: number;
-  remark: string | null;
   status: string;
   changes: Record<string, number>;
   requester?: { username?: string; name?: string };
@@ -68,11 +67,6 @@ export default function GameSettingHistory() {
                 ))}
               </Flex>
             ),
-          },
-          {
-            title: t('settings.gameSettings.remark', '修改备注'),
-            dataIndex: 'remark',
-            render: (_, record) => record.remark || '-',
           },
           {
             title: t('settings.gameSettingHistory.operator', '操作人'),
