@@ -6,8 +6,8 @@ import {
   ProFormRadio,
 } from '@ant-design/pro-components';
 import { useIntl } from '@umijs/max';
-import { App, Card, Spin, Tabs, Typography } from 'antd';
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { App, Card, Spin, Tabs } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import {
   type GameSettingDefinition,
   type GameSettings,
@@ -78,22 +78,10 @@ function displayValues(settings: GameSettings): Record<string, number> {
   );
 }
 
-function ruleExtra(definition: GameSettingDefinition) {
-  return (
-    <Typography.Text type="secondary">
-      {formatDisplayNumber(toDisplayValue(definition.minimum, definition))} -{' '}
-      {formatDisplayNumber(toDisplayValue(definition.maximum, definition))}
-    </Typography.Text>
-  );
-}
-
-function twoColumnStyle(): CSSProperties {
-  return {
-    display: 'grid',
-    gap: 32,
-    gridTemplateColumns: 'repeat(2, minmax(280px, 1fr))',
-    overflowX: 'auto',
-  };
+function rangePlaceholder(definition: GameSettingDefinition): string {
+  const minimum = formatDisplayNumber(toDisplayValue(definition.minimum, definition));
+  const maximum = formatDisplayNumber(toDisplayValue(definition.maximum, definition));
+  return `${minimum} - ${maximum}`;
 }
 
 export default function GameSettingsPage() {
@@ -127,6 +115,7 @@ export default function GameSettingsPage() {
             formRef={formRef}
             initialValues={initialValues}
             submitter={{
+              resetButtonProps: false,
               searchConfig: { submitText: t('common.save', '保存') },
             }}
             onFinish={async (values) => {
@@ -202,7 +191,7 @@ function ExperienceRateSettings({
   t: Translate;
 }) {
   return (
-    <div style={twoColumnStyle()}>
+    <div>
       <RateField
         name="base_exp_rate"
         definition={settings.definitions.base_exp_rate}
@@ -281,13 +270,13 @@ function RateField({
       formItemProps={compact ? { style: { marginBottom: 0 } } : undefined}
       fieldProps={{
         'aria-label': ruleLabel(name, t),
+        placeholder: rangePlaceholder(definition),
         style: compact ? { width: '100%' } : undefined,
         step: 0.01,
         formatter: (value, info) =>
           info.userTyping ? info.input : formatDisplayNumber(value),
-        parser: (value) => Number(String(value ?? '').replace(/,/g, '')),
+
       }}
-      extra={compact ? undefined : ruleExtra(definition)}
       addonAfter={t('settings.gameSettings.unit.times', '倍')}
       width={compact ? undefined : 'md'}
       rules={rangeRules(minimum, maximum, t)}
@@ -363,9 +352,8 @@ function NavigationSettings({
       <ProFormDigit
         name="navigation_teleport_cooldown"
         label={ruleLabel('navigation_teleport_cooldown', t)}
-        fieldProps={{ precision: 0 }}
+        fieldProps={{ precision: 0, placeholder: rangePlaceholder(settings.definitions.navigation_teleport_cooldown) }}
         addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
-        extra={ruleExtra(settings.definitions.navigation_teleport_cooldown)}
         width="md"
         rules={rangeRules(
           settings.definitions.navigation_teleport_cooldown.minimum,
@@ -378,9 +366,6 @@ function NavigationSettings({
         label={ruleLabel('navigation_map_channels_enabled', t)}
         radioType="button"
         options={BinaryOptions({ t })}
-        extra={ruleExtra(
-          settings.definitions.navigation_map_channels_enabled,
-        )}
         rules={[{ required: true }]}
       />
     </>
@@ -413,9 +398,8 @@ function MonsterSpawnSettings({
           key={key}
           name={key}
           label={ruleLabel(key, t)}
-          fieldProps={{ precision: 0 }}
+          fieldProps={{ precision: 0, placeholder: rangePlaceholder(settings.definitions[key]) }}
           addonAfter={t('settings.gameSettings.unit.seconds', '秒')}
-          extra={ruleExtra(settings.definitions[key])}
           width="md"
           rules={rangeRules(
             settings.definitions[key].minimum,
