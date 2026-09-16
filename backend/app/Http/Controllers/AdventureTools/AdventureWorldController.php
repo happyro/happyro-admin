@@ -61,6 +61,7 @@ final class AdventureWorldController
 
         return response()->json($this->world->maps(new MapQuery(
             gameOnly: true,
+            adventureOrder: true,
             channelsEnabled: $channelsEnabled,
             query: $data['query'] ?? null,
             onMap: $data['onMap'] ?? null,

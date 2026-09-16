@@ -93,6 +93,16 @@ final class WorldDataServiceTest extends TestCase
         }
     }
 
+    public function test_adventure_maps_keep_normal_maps_before_dungeons_instances_and_arenas(): void
+    {
+        $maps = $this->service()->maps(new MapQuery(gameOnly: true, channelsEnabled: false, adventureOrder: true, perPage: 5000));
+        $codes = array_column($maps['data'], 'map');
+        $this->assertContains('prt_fild01', $codes);
+        $this->assertContains('gef_dun01', $codes);
+        $this->assertLessThan(array_search('gef_dun01', $codes, true), array_search('prt_fild01', $codes, true));
+        $this->assertSame('prontera', $codes[0]);
+    }
+
     public function test_reads_the_server_map_index(): void
     {
         $root = storage_path('framework/testing/world-data');

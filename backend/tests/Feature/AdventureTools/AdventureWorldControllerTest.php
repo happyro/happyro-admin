@@ -128,6 +128,14 @@ final class AdventureWorldControllerTest extends TestCase
             ->assertOk()->assertJsonPath('total', 2)->assertJsonPath('data.0.id', 'alias');
     }
 
+    public function test_adventure_map_search_ranks_exact_match_before_substring_before_pagination(): void
+    {
+        $this->mock(GameServerGateway::class)->shouldReceive('battleConfig')->andReturn(['navigation_map_channels_enabled' => 0]);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/maps?query=彩虹桥&perPage=1')
+            ->assertOk()->assertJsonPath('data.0.map', 'bif_fild01');
+    }
+
     public function test_world_catalogs_require_a_game_session(): void
     {
         $this->getJson('/api/adventure-tools/npcs')->assertUnauthorized();

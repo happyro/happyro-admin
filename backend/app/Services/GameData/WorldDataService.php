@@ -41,6 +41,11 @@ final class WorldDataService
             $this->catalog($query->channelsEnabled),
             fn (array $row): bool => $this->visible($row, $query) && $this->matches($row, $query, $onMap),
         ));
+        if ($query->adventureOrder) {
+            $term = mb_strtolower(trim((string) $query->query));
+            $order = $this->commonOrder();
+            usort($rows, fn (array $left, array $right): int => $this->compareAdventure($left, $right, $term, $order));
+        }
         if ($currentMap && ! $query->query) {
             $rows = $this->prioritize($rows, $currentMap);
         }
@@ -189,6 +194,37 @@ final class WorldDataService
                 (string) ($left['name_zh_cn'] ?? $left['map']),
                 (string) ($right['name_zh_cn'] ?? $right['map']),
             )
+            ?: strcmp($left['map'], $right['map']);
+    }
+
+    /**
+     * Preserve the adventure catalog ranking from happyro-client MapCatalogData.js.
+     * Admin tables retain their existing town/name ordering.
+     *
+     * @param  array<string, mixed>  $left
+     * @param  array<string, mixed>  $right
+     */
+    private function compareAdventure(array $left, array $right, string $term, array $order): int
+    {
+        $rank = function (array $row) use ($term, $order): array {
+            $values = [mb_strtolower($row['map']), mb_strtolower((string) $row['name_zh_cn'])];
+            $match = $term === '' || in_array($term, $values, true) ? 0
+                : (array_any($values, static fn (string $value): bool => str_starts_with($value, $term)) ? 1 : 2);
+            $map = $row['map'];
+            $kind = match (true) {
+                isset($order[$map]) => 1,
+                preg_match('/^(?:pvp_|guild_vs|bat_|schg_|teg_|gvg_)/', $map) === 1,
+                preg_match('/\\bpvp\\b|对战|竞技场/ui', (string) $row['name_zh_cn']) === 1 => 5,
+                preg_match('/^(?:[12]@|e_|dali|ver_eju|glast_01)/', $map) === 1 => 4,
+                preg_match('/(?:_in\\d*|_dun\\d*|dun\\d*|_q\\d*|_room|_boss)$/', $map) === 1 => 3,
+                default => 2,
+            };
+
+            return [$match, $row['image_kind'] === 'image' ? 0 : 1, $kind, $order[$map] ?? 0];
+        };
+
+        return $rank($left) <=> $rank($right)
+            ?: $this->collator()->compare((string) $left['name_zh_cn'], (string) $right['name_zh_cn'])
             ?: strcmp($left['map'], $right['map']);
     }
 
