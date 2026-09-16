@@ -28,12 +28,10 @@ const normalDropRateKeys = [
   'item_rate_equip',
   'item_rate_card',
 ] as const;
-const mvpDropRateKeys = [
-  'item_rate_common_mvp',
-  'item_rate_heal_mvp',
-  'item_rate_use_mvp',
-  'item_rate_equip_mvp',
-  'item_rate_card_mvp',
+const dropCategories = [
+  { suffix: '', key: 'normal', label: '普通魔物' },
+  { suffix: '_boss', key: 'mini', label: 'Mini' },
+  { suffix: '_mvp', key: 'mvp', label: 'MVP' },
 ] as const;
 
 function ruleLabel(key: string, t: Translate): string {
@@ -103,7 +101,7 @@ export default function GameSettingsPage() {
   const { message } = App.useApp();
   const [settings, setSettings] = useState<GameSettings>();
   const [activeTab, setActiveTab] = useState('experience');
-  const formRef = useRef<ProFormInstance>();
+  const formRef = useRef<ProFormInstance>(undefined);
   const t: Translate = (id, fallback, values) =>
     intl.formatMessage({ id, defaultMessage: fallback }, values);
 
@@ -227,19 +225,38 @@ function DropRateSettings({
   t: Translate;
 }) {
   return (
-    <div style={twoColumnStyle()}>
-      {[normalDropRateKeys, mvpDropRateKeys].map((keys) => (
-        <div key={keys[0]}>
-          {keys.map((key) => (
-            <RateField
-              key={key}
-              name={key}
-              definition={settings.definitions[key]}
-              t={t}
-            />
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', minWidth: 600, borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th scope="col" style={{ textAlign: 'left', padding: 8 }}>
+              {t('settings.gameSettings.dropType', '物品类型')}
+            </th>
+            {dropCategories.map((category) => (
+              <th key={category.key} scope="col" style={{ textAlign: 'left', padding: 8 }}>
+                {t(`settings.gameSettings.dropCategory.${category.key}`, category.label)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {normalDropRateKeys.map((baseKey) => (
+            <tr key={baseKey}>
+              <th scope="row" style={{ textAlign: 'left', padding: 8, fontWeight: 'normal' }}>
+                {ruleLabel(baseKey, t)}
+              </th>
+              {dropCategories.map(({ suffix }) => {
+                const key = `${baseKey}${suffix}`;
+                return (
+                  <td key={key} style={{ padding: 8 }}>
+                    <RateField name={key} definition={settings.definitions[key]} t={t} compact />
+                  </td>
+                );
+              })}
+            </tr>
           ))}
-        </div>
-      ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -248,25 +265,31 @@ function RateField({
   name,
   definition,
   t,
+  compact = false,
 }: {
   name: string;
   definition: GameSettingDefinition;
   t: Translate;
+  compact?: boolean;
 }) {
   const minimum = toDisplayValue(definition.minimum, definition);
   const maximum = toDisplayValue(definition.maximum, definition);
   return (
     <ProFormDigit
       name={name}
-      label={ruleLabel(name, t)}
+      label={compact ? undefined : ruleLabel(name, t)}
+      formItemProps={compact ? { style: { marginBottom: 0 } } : undefined}
       fieldProps={{
+        'aria-label': ruleLabel(name, t),
+        style: compact ? { width: '100%' } : undefined,
         step: 0.01,
         formatter: (value, info) =>
           info.userTyping ? info.input : formatDisplayNumber(value),
         parser: (value) => Number(String(value ?? '').replace(/,/g, '')),
       }}
-      extra={ruleExtra(definition)}
-      width="md"
+      extra={compact ? undefined : ruleExtra(definition)}
+      addonAfter={t('settings.gameSettings.unit.times', '倍')}
+      width={compact ? undefined : 'md'}
       rules={rangeRules(minimum, maximum, t)}
     />
   );

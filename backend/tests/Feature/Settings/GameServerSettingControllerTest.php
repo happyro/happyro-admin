@@ -17,6 +17,42 @@ final class GameServerSettingControllerTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_applies_independent_normal_mini_and_mvp_drop_rates(): void
+    {
+        $this->actingAs($this->superAdmin());
+        $changes = [
+            'item_rate_card' => 100,
+            'item_rate_card_boss' => 1000000,
+            'item_rate_card_mvp' => 300,
+            'item_rate_common_boss' => 400,
+            'item_rate_heal_boss' => 500,
+            'item_rate_use_boss' => 600,
+            'item_rate_equip_boss' => 700,
+        ];
+        $writer = Mockery::mock(GameServerConfigWriter::class);
+        $writer->expects('snapshot')->once()->andReturn('old config');
+        $writer->expects('write')->once()->with($changes);
+        $this->app->instance(GameServerConfigWriter::class, $writer);
+        $gateway = Mockery::mock(GameServerGateway::class);
+        $gateway->expects('execute')->once()->with(Mockery::on(
+            fn ($command) => array_column($command->payload['changes'], 'value', 'key') == $changes,
+        ))->andReturn(new GameServerCommandResult(['changes' => []]));
+        $gateway->expects('battleConfig')->twice()->andReturn($changes + ['game_tools_game_settings_policy' => 2]);
+        $this->app->instance(GameServerGateway::class, $gateway);
+
+        $this->putJson('/api/settings/game-settings', ['changes' => $changes])
+            ->assertOk()->assertJsonPath('data.status', 'applied');
+
+        foreach ($changes as $key => $value) {
+            $this->assertDatabaseHas('game_server_settings', ['setting_key' => $key, 'actual_value' => $value]);
+        }
+        $this->getJson('/api/settings/game-settings')->assertOk()
+            ->assertJsonPath('data.values.item_rate_card_boss', 1000000)
+            ->assertJsonPath('data.definitions.item_rate_heal_boss.maximum', 1000000)
+            ->assertJsonPath('data.definitions.item_rate_use_boss.unit', 'percent')
+            ->assertJsonPath('data.definitions.item_rate_equip_boss.minimum', 0);
+    }
+
     public function test_super_admin_can_read_registered_values(): void
     {
         $gateway = Mockery::mock(GameServerGateway::class);
