@@ -24,10 +24,26 @@ final class WorldDataService
      */
     public function maps(MapQuery $query): array
     {
+        $canonicalMaps = $query->channelsEnabled ? [] : array_column(
+            $this->json($this->path('map-catalog.json'))['entries'] ?? [], 'canonical_map', 'map',
+        );
+        $resolveMap = static function (?string $map) use ($canonicalMaps): ?string {
+            if ($map === null) {
+                return null;
+            }
+            $map = mb_strtolower($map);
+
+            return $canonicalMaps[$map] ?? $map;
+        };
+        $onMap = $resolveMap($query->onMap);
+        $currentMap = $resolveMap($query->currentMap);
         $rows = array_values(array_filter(
             $this->catalog($query->channelsEnabled),
-            fn (array $row): bool => $this->visible($row, $query) && $this->matches($row, $query),
+            fn (array $row): bool => $this->visible($row, $query) && $this->matches($row, $query, $onMap),
         ));
+        if ($currentMap && ! $query->query) {
+            $rows = $this->prioritize($rows, $currentMap);
+        }
 
         return [
             'data' => array_slice($rows, ($query->page - 1) * $query->perPage, $query->perPage),
@@ -145,14 +161,14 @@ final class WorldDataService
     }
 
     /** @param array<string, mixed> $row */
-    private function matches(array $row, MapQuery $query): bool
+    private function matches(array $row, MapQuery $query, ?string $onMap): bool
     {
         $contains = static fn (?string $haystack, ?string $needle): bool => $needle === null || $needle === ''
             || ($haystack !== null && str_contains(mb_strtolower($haystack), mb_strtolower($needle)));
         $search = $query->query === null || $query->query === ''
             || $contains($row['map'], $query->query) || $contains($row['name_zh_cn'], $query->query);
-        $scoped = $query->onMap === null || $query->onMap === ''
-            || $row['map'] === mb_strtolower($query->onMap);
+        $scoped = $onMap === null || $onMap === ''
+            || $row['map'] === $onMap;
 
         return $search && $scoped && $contains($row['map'], $query->map) && $contains($row['name_zh_cn'], $query->name);
     }
@@ -179,6 +195,27 @@ final class WorldDataService
     private function collator(): Collator
     {
         return $this->collator ??= new Collator('zh-CN');
+    }
+
+    /**
+     * Move the player's current map to the front of an already sorted list,
+     * keeping every other row in its existing relative order.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function prioritize(array $rows, string $map): array
+    {
+        foreach ($rows as $index => $row) {
+            if ($row['map'] === $map) {
+                $current = $rows[$index];
+                unset($rows[$index]);
+                array_unshift($rows, $current);
+                break;
+            }
+        }
+
+        return array_values($rows);
     }
 
     /** @return array<string, int> */

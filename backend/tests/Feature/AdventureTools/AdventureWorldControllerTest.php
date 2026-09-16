@@ -78,6 +78,14 @@ final class AdventureWorldControllerTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.map', 'prontera');
     }
 
+    public function test_hidden_channel_current_map_is_prioritized_through_the_adventure_api(): void
+    {
+        $this->mock(GameServerGateway::class)->shouldReceive('battleConfig')->andReturn(['navigation_map_channels_enabled' => 0]);
+
+        $this->withHeaders($this->headers())->getJson('/api/adventure-tools/maps?currentMap=izlude_a&perPage=1')
+            ->assertOk()->assertJsonPath('data.0.map', 'izlude');
+    }
+
     public function test_world_catalogs_require_a_game_session(): void
     {
         $this->getJson('/api/adventure-tools/npcs')->assertUnauthorized();

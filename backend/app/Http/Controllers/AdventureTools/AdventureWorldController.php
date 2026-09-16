@@ -63,6 +63,7 @@ final class AdventureWorldController
             channelsEnabled: $channelsEnabled,
             query: $data['query'] ?? null,
             onMap: $data['onMap'] ?? null,
+            currentMap: $data['currentMap'] ?? null,
             page: $data['page'] ?? 1,
             perPage: $data['perPage'] ?? 35,
         )));

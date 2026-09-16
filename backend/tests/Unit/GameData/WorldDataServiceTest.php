@@ -28,6 +28,54 @@ final class WorldDataServiceTest extends TestCase
         $this->assertSame(['prontera', 'prt_fild08', 'izlude'], $maps);
     }
 
+    public function test_current_map_leads_the_default_list_but_not_a_search(): void
+    {
+        $default = array_column($this->service()->maps($this->mapQuery(perPage: 3))['data'], 'map');
+        $this->assertSame(['prontera', 'prt_fild08', 'izlude'], $default);
+
+        $prioritized = array_column(
+            $this->service()->maps($this->mapQuery(perPage: 3, currentMap: 'payon'))['data'], 'map',
+        );
+        $this->assertSame(['payon', 'prontera', 'prt_fild08'], $prioritized);
+
+        $unsearched = $this->service()->maps($this->mapQuery(perPage: 100, query: 'prt_fild'));
+        $searched = $this->service()->maps($this->mapQuery(perPage: 100, query: 'prt_fild', currentMap: 'payon'));
+        $this->assertSame(
+            array_column($unsearched['data'], 'map'),
+            array_column($searched['data'], 'map'),
+        );
+    }
+
+    public function test_hidden_channels_use_the_canonical_map_for_priority_and_scope(): void
+    {
+        $service = $this->service();
+        $prioritized = $service->maps(new MapQuery(
+            gameOnly: true, channelsEnabled: false, currentMap: 'IZLUDE_A', perPage: 1,
+        ));
+        $this->assertSame(['izlude'], array_column($prioritized['data'], 'map'));
+
+        $scoped = $service->maps(new MapQuery(
+            gameOnly: true, channelsEnabled: false, onMap: 'izlude_a',
+        ));
+        $this->assertSame(['izlude'], array_column($scoped['data'], 'map'));
+        $this->assertSame(1, $scoped['total']);
+    }
+
+    public function test_visible_channels_keep_the_exact_map_for_priority_and_scope(): void
+    {
+        $service = $this->service();
+        $prioritized = $service->maps(new MapQuery(
+            gameOnly: true, channelsEnabled: true, currentMap: 'izlude_a', perPage: 1,
+        ));
+        $this->assertSame(['izlude_a'], array_column($prioritized['data'], 'map'));
+
+        $scoped = $service->maps(new MapQuery(
+            gameOnly: true, channelsEnabled: true, onMap: 'izlude_a',
+        ));
+        $this->assertSame(['izlude_a'], array_column($scoped['data'], 'map'));
+        $this->assertSame(1, $scoped['total']);
+    }
+
     public function test_maps_are_paginated_and_filtered_on_the_server(): void
     {
         $service = $this->service();
@@ -92,6 +140,8 @@ final class WorldDataServiceTest extends TestCase
     private function mapQuery(
         bool $gameOnly = true,
         ?string $map = null,
+        ?string $query = null,
+        ?string $currentMap = null,
         int $page = 1,
         int $perPage = 20,
     ): MapQuery {
@@ -99,6 +149,8 @@ final class WorldDataServiceTest extends TestCase
             gameOnly: $gameOnly,
             channelsEnabled: false,
             map: $map,
+            query: $query,
+            currentMap: $currentMap,
             page: $page,
             perPage: $perPage,
         );
