@@ -1,6 +1,6 @@
 import component from './en-US/component';
-import jobOptions from './en-US/job-options';
 import globalHeader from './en-US/globalHeader';
+import jobOptions from './en-US/job-options';
 import menu from './en-US/menu';
 import network from './en-US/network';
 import pages from './en-US/pages';
@@ -59,7 +59,8 @@ export default {
     'Mini common item drop rate',
   'settings.gameSettings.key.item_rate_common_mvp': 'MVP common item drop rate',
   'settings.gameSettings.key.item_rate_heal': 'Healing item drop rate',
-  'settings.gameSettings.key.item_rate_heal_boss': 'Mini healing item drop rate',
+  'settings.gameSettings.key.item_rate_heal_boss':
+    'Mini healing item drop rate',
   'settings.gameSettings.key.item_rate_heal_mvp': 'MVP healing item drop rate',
   'settings.gameSettings.key.item_rate_use': 'Usable item drop rate',
   'settings.gameSettings.key.item_rate_use_boss': 'Mini usable item drop rate',
@@ -224,7 +225,7 @@ export default {
   'operations.itemGrants.delivery.mail': 'Mail',
   'operations.itemGrants.delivery.inventory': 'Inventory',
   'operations.itemGrants.inventoryOnlineOnly':
-    'Inventory delivery requires the character to be online; equipment is identified automatically.',
+    'Inventory delivery requires the character to be online.',
   'operations.itemGrants.inventorySuccess': 'Item added to inventory',
   'operations.itemGrants.zenySuccess': 'Zeny granted',
   'operations.itemGrants.zenyOnlineOnly':
