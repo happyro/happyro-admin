@@ -9,15 +9,17 @@ import { Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import MonsterSpawnModal from '@/components/MonsterSpawnModal';
 import {
-  MONSTER_KINDS,
   MONSTER_ELEMENTS,
+  MONSTER_KINDS,
   MONSTER_RACES,
   MONSTER_SIZES,
 } from '@/data/game/monster-types';
 import {
   type GameDataMonster,
+  type GameDataMonsterDrop,
   getMonster,
   listMonsters,
+  monsterDropName,
   monsterName,
 } from '@/services/game-data/monsters';
 
@@ -274,14 +276,14 @@ function MonsterDetails({
           span={2}
           label={t('gameData.monster.drops', '掉落物品')}
         >
-          <DropList drops={monster.Drops} t={t} />
+          <DropList drops={monster.Drops} locale={locale} t={t} />
         </Descriptions.Item>
         {monster.MvpDrops && (
           <Descriptions.Item
             span={2}
             label={t('gameData.monster.mvpDrops', 'MVP 奖励')}
           >
-            <DropList drops={monster.MvpDrops} t={t} />
+            <DropList drops={monster.MvpDrops} locale={locale} t={t} />
           </Descriptions.Item>
         )}
       </Descriptions>
@@ -291,16 +293,18 @@ function MonsterDetails({
 
 function DropList({
   drops,
+  locale,
   t,
 }: {
-  drops?: { Item: string; Rate: number }[];
+  drops?: GameDataMonsterDrop[];
+  locale: string;
   t: Translate;
 }) {
   return drops?.length ? (
     <Space wrap>
       {drops.map((drop) => (
         <Tag key={`${drop.Item}-${drop.Rate}`}>
-          {drop.Item} · {(drop.Rate / 100).toFixed(2)}%
+          {monsterDropName(drop, locale)} · {(drop.Rate / 100).toFixed(2)}%
         </Tag>
       ))}
     </Space>

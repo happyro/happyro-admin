@@ -1,5 +1,12 @@
 import { request } from '@umijs/max';
 
+export type GameDataMonsterDrop = {
+  Item: string;
+  Rate: number;
+  itemId?: number;
+  names?: Record<string, string>;
+};
+
 export type GameDataMonster = {
   Id: number;
   image?: string;
@@ -25,12 +32,16 @@ export type GameDataMonster = {
   Luk?: number;
   kind: 'normal' | 'mini' | 'mvp';
   serverVersion: string;
-  Drops?: { Item: string; Rate: number }[];
-  MvpDrops?: { Item: string; Rate: number }[];
+  Drops?: GameDataMonsterDrop[];
+  MvpDrops?: GameDataMonsterDrop[];
 };
 
 export function monsterName(monster: GameDataMonster, locale: string): string {
   return monster.names[locale] || monster.names['en-US'] || String(monster.Id);
+}
+
+export function monsterDropName(drop: GameDataMonsterDrop, locale: string): string {
+  return drop.names?.[locale] || drop.names?.['zh-CN'] || drop.names?.['en-US'] || drop.Item;
 }
 
 export async function listMonsters(params: Record<string, unknown>) {
