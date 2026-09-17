@@ -9,7 +9,7 @@ import { Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import MonsterSpawnModal from '@/components/MonsterSpawnModal';
 import {
-  MONSTER_CLASSES,
+  MONSTER_KINDS,
   MONSTER_ELEMENTS,
   MONSTER_RACES,
   MONSTER_SIZES,
@@ -98,16 +98,16 @@ export default function Monsters() {
         ),
       },
       {
-        title: t('gameData.monster.class', '级别'),
-        dataIndex: 'class',
+        title: t('gameData.monster.kind', '级别'),
+        dataIndex: 'kind',
         hideInTable: true,
         valueType: 'select',
         initialValue: 'all',
         fieldProps: { allowClear: false },
         valueEnum: Object.fromEntries(
-          MONSTER_CLASSES.map((value) => [
+          MONSTER_KINDS.map((value) => [
             value,
-            t(`gameData.monster.class.${value}`, value),
+            t(`gameData.monster.kind.${value}`, value),
           ]),
         ),
       },
@@ -248,12 +248,9 @@ function MonsterDetails({
         <Descriptions.Item label={t('gameData.monster.size', '体型')}>
           {typeLabel('size', monster.Size, t)}
         </Descriptions.Item>
-        <Descriptions.Item label={t('gameData.monster.class', '级别')}>
-          <Tag color={monsterClass(monster) === 'normal' ? undefined : 'gold'}>
-            {t(
-              `gameData.monster.class.${monsterClass(monster)}`,
-              monsterClass(monster),
-            )}
+        <Descriptions.Item label={t('gameData.monster.kind', '级别')}>
+          <Tag color={monster.kind === 'normal' ? undefined : 'gold'}>
+            {t(`gameData.monster.kind.${monster.kind}`, monster.kind)}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label={t('gameData.monster.baseExp', '基础经验')}>
@@ -290,13 +287,6 @@ function MonsterDetails({
       </Descriptions>
     </Space>
   );
-}
-
-function monsterClass(monster: GameDataMonster): 'normal' | 'mini' | 'mvp' {
-  if (monster.MvpDrops && monster.MvpDrops.length > 0) {
-    return 'mvp';
-  }
-  return monster.isBoss ? 'mini' : 'normal';
 }
 
 function DropList({

@@ -23,7 +23,7 @@ export type GameDataMonster = {
   Int?: number;
   Dex?: number;
   Luk?: number;
-  isBoss: boolean;
+  kind: 'normal' | 'mini' | 'mvp';
   serverVersion: string;
   Drops?: { Item: string; Rate: number }[];
   MvpDrops?: { Item: string; Rate: number }[];

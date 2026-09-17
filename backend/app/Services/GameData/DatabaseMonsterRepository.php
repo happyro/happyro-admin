@@ -20,7 +20,7 @@ final class DatabaseMonsterRepository implements MonsterRepository
             ->when($query->race, fn (Builder $rows, string $value): Builder => $rows->where('race', $value))
             ->when($query->element, fn (Builder $rows, string $value): Builder => $rows->where('element', $value))
             ->when($query->size, fn (Builder $rows, string $value): Builder => $rows->where('size', $value))
-            ->when($query->class, fn (Builder $rows, string $value): Builder => $this->classified($rows, $value));
+            ->when($query->kind, fn (Builder $rows, string $value): Builder => $this->classified($rows, $value));
         $total = (clone $builder)->count();
         $data = $builder->orderBy('monster_id')->forPage($query->page, $query->perPage)->get();
 
@@ -44,14 +44,9 @@ final class DatabaseMonsterRepository implements MonsterRepository
         return GameMonster::query()->with('catalog:id,source_version')->where('game_data_catalog_id', $catalogId ?? 0);
     }
 
-    private function classified(Builder $builder, string $class): Builder
+    private function classified(Builder $builder, string $kind): Builder
     {
-        return match ($class) {
-            'normal' => $builder->where('is_boss', false)->whereNull('payload->MvpDrops'),
-            'mini' => $builder->where('is_boss', true)->whereNull('payload->MvpDrops'),
-            'mvp' => $builder->whereNotNull('payload->MvpDrops'),
-            default => $builder,
-        };
+        return $kind === 'all' ? $builder : $builder->where('kind', $kind);
     }
 
     private function matching(Builder $builder, string $value): Builder
@@ -78,7 +73,7 @@ final class DatabaseMonsterRepository implements MonsterRepository
             'Level' => $monster->level, 'Hp' => $monster->hp,
             'Size' => $monster->size, 'Race' => $monster->race,
             'Element' => $monster->element, 'ElementLevel' => $monster->element_level,
-            'isBoss' => $monster->is_boss, 'serverVersion' => $monster->catalog->source_version,
+            'kind' => $monster->kind, 'serverVersion' => $monster->catalog->source_version,
         ];
     }
 }
