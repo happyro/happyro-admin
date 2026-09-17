@@ -9,6 +9,7 @@ import { Button, Descriptions, Drawer, Empty, Space, Tag } from 'antd';
 import { useMemo, useState } from 'react';
 import MonsterSpawnModal from '@/components/MonsterSpawnModal';
 import {
+  MONSTER_CLASSES,
   MONSTER_ELEMENTS,
   MONSTER_RACES,
   MONSTER_SIZES,
@@ -97,11 +98,18 @@ export default function Monsters() {
         ),
       },
       {
-        title: t('gameData.monster.boss', '首领'),
-        dataIndex: 'boss',
+        title: t('gameData.monster.class', '级别'),
+        dataIndex: 'class',
         hideInTable: true,
         valueType: 'select',
-        valueEnum: { 1: t('common.yes', '是'), 0: t('common.no', '否') },
+        initialValue: 'all',
+        fieldProps: { allowClear: false },
+        valueEnum: Object.fromEntries(
+          MONSTER_CLASSES.map((value) => [
+            value,
+            t(`gameData.monster.class.${value}`, value),
+          ]),
+        ),
       },
       {
         title: t('common.actions', '操作'),
@@ -241,10 +249,11 @@ function MonsterDetails({
           {typeLabel('size', monster.Size, t)}
         </Descriptions.Item>
         <Descriptions.Item label={t('gameData.monster.class', '级别')}>
-          <Tag color={monster.isBoss ? 'gold' : undefined}>
-            {monster.isBoss
-              ? t('gameData.monster.boss', '首领')
-              : t('gameData.monster.normal', '普通')}
+          <Tag color={monsterClass(monster) === 'normal' ? undefined : 'gold'}>
+            {t(
+              `gameData.monster.class.${monsterClass(monster)}`,
+              monsterClass(monster),
+            )}
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label={t('gameData.monster.baseExp', '基础经验')}>
@@ -281,6 +290,13 @@ function MonsterDetails({
       </Descriptions>
     </Space>
   );
+}
+
+function monsterClass(monster: GameDataMonster): 'normal' | 'mini' | 'mvp' {
+  if (monster.MvpDrops && monster.MvpDrops.length > 0) {
+    return 'mvp';
+  }
+  return monster.isBoss ? 'mini' : 'normal';
 }
 
 function DropList({

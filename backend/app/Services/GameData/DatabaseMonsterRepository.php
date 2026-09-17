@@ -20,7 +20,7 @@ final class DatabaseMonsterRepository implements MonsterRepository
             ->when($query->race, fn (Builder $rows, string $value): Builder => $rows->where('race', $value))
             ->when($query->element, fn (Builder $rows, string $value): Builder => $rows->where('element', $value))
             ->when($query->size, fn (Builder $rows, string $value): Builder => $rows->where('size', $value))
-            ->when($query->boss !== null, fn (Builder $rows): Builder => $rows->where('is_boss', $query->boss));
+            ->when($query->class, fn (Builder $rows, string $value): Builder => $this->classified($rows, $value));
         $total = (clone $builder)->count();
         $data = $builder->orderBy('monster_id')->forPage($query->page, $query->perPage)->get();
 
@@ -42,6 +42,16 @@ final class DatabaseMonsterRepository implements MonsterRepository
             ->where('source_version', $version)->value('id');
 
         return GameMonster::query()->with('catalog:id,source_version')->where('game_data_catalog_id', $catalogId ?? 0);
+    }
+
+    private function classified(Builder $builder, string $class): Builder
+    {
+        return match ($class) {
+            'normal' => $builder->where('is_boss', false)->whereNull('payload->MvpDrops'),
+            'mini' => $builder->where('is_boss', true)->whereNull('payload->MvpDrops'),
+            'mvp' => $builder->whereNotNull('payload->MvpDrops'),
+            default => $builder,
+        };
     }
 
     private function matching(Builder $builder, string $value): Builder
