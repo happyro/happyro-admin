@@ -9,6 +9,8 @@ enum GameServerCommandType: string
     case CharacterSkillPointsUpdate = 'character.skill_points.update';
     case CharacterStatsUpdate = 'character.stats.update';
     case CharacterStatsReset = 'character.stats.reset';
+    case CharacterTraitsUpdate = 'character.traits.update';
+    case CharacterTraitsReset = 'character.traits.reset';
     case CharacterSkillsReset = 'character.skills.reset';
     case CharacterVitalsRestore = 'character.vitals.restore';
     case CharacterInventoryItemGrant = 'character.inventory.item_grant';

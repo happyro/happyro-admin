@@ -31,6 +31,8 @@ final class RunCharacterMaintenanceRequest extends FormRequest
                 'character.skill_points.update',
                 'character.stats.update',
                 'character.stats.reset',
+                'character.traits.update',
+                'character.traits.reset',
                 'character.skills.reset',
                 'character.vitals.restore',
             ])],
@@ -45,6 +47,12 @@ final class RunCharacterMaintenanceRequest extends FormRequest
             'payload.int' => ['sometimes', 'integer', 'min:1'],
             'payload.dex' => ['sometimes', 'integer', 'min:1'],
             'payload.luk' => ['sometimes', 'integer', 'min:1'],
+            'payload.pow' => ['sometimes', 'integer', 'min:0'],
+            'payload.sta' => ['sometimes', 'integer', 'min:0'],
+            'payload.wis' => ['sometimes', 'integer', 'min:0'],
+            'payload.spl' => ['sometimes', 'integer', 'min:0'],
+            'payload.con' => ['sometimes', 'integer', 'min:0'],
+            'payload.crt' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 
@@ -59,6 +67,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
                 'character.progression.update' => ['base_level', 'job_level', 'job_id'],
                 'character.skill_points.update' => ['skill_points'],
                 'character.stats.update' => ['str', 'agi', 'vit', 'int', 'dex', 'luk'],
+                'character.traits.update' => ['pow', 'sta', 'wis', 'spl', 'con', 'crt'],
                 'character.vitals.restore' => ['vitals'],
                 default => [],
             };
@@ -66,7 +75,7 @@ final class RunCharacterMaintenanceRequest extends FormRequest
                 $validator->errors()->add('payload', '操作参数无效');
             }
 
-            if (in_array($this->string('type')->toString(), ['character.progression.update', 'character.skill_points.update', 'character.stats.update'], true)
+            if (in_array($this->string('type')->toString(), ['character.progression.update', 'character.skill_points.update', 'character.stats.update', 'character.traits.update'], true)
                 && $this->array('payload') === []) {
                 $validator->errors()->add('payload', '至少需要修改一个字段');
             }
