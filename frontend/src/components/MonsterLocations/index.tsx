@@ -1,7 +1,7 @@
 import { useAccess, useIntl } from '@umijs/max';
-import { Empty, Space } from 'antd';
+import { Empty, Table } from 'antd';
 import CharacterNavigationModal from '@/components/CharacterNavigationModal';
-import { mapMappings } from '@/data/game/maps';
+import { monsterSpawnMapMappings } from '@/data/game/monster-spawn-maps';
 import spawnCatalog from '@/data/game/monster-spawns.json';
 
 type Spawn = { map: string; x: number; y: number; count: number };
@@ -10,40 +10,58 @@ const spawns: Record<string, Spawn[]> = spawnCatalog.monsters;
 export default function MonsterLocations({ monsterId }: { monsterId: number }) {
   const intl = useIntl();
   const access = useAccess();
-  const locations = spawns[String(monsterId)] ?? [];
+  const locations = (spawns[String(monsterId)] ?? []).map((spawn) => ({
+    ...spawn,
+    name: intl.formatMessage({
+      id: monsterSpawnMapMappings[spawn.map],
+      defaultMessage: spawn.map,
+    }),
+  }));
   return (
     <section aria-label="出现地图">
-      <h4>出现地图</h4>
       {locations.length ? (
-        <Space orientation="vertical" style={{ width: '100%' }}>
-          {locations.map((spawn) => {
-            const name = mapMappings[spawn.map]
-              ? intl.formatMessage({
-                  id: mapMappings[spawn.map],
-                  defaultMessage: spawn.map,
-                })
-              : spawn.map;
-            return (
-              <div key={spawn.map}>
-                <Space wrap>
-                  <span>
-                    {name} · {spawn.map}
-                  </span>
-                  <span>{spawn.count} 只</span>
-                  {access.canGameControl && access.canViewPlayers && (
-                    <CharacterNavigationModal
-                      map={spawn.map}
-                      mapName={name}
-                      name={name}
-                      x={spawn.x}
-                      y={spawn.y}
-                    />
-                  )}
-                </Space>
-              </div>
-            );
-          })}
-        </Space>
+        <Table
+          size="small"
+          rowKey="map"
+          pagination={false}
+          dataSource={locations}
+          columns={[
+            {
+              title: '地图',
+              dataIndex: 'name',
+              render: (_, spawn) => (
+                <div>
+                  <div>{spawn.name}</div>
+                  <div className="text-xs opacity-60">{spawn.map}</div>
+                </div>
+              ),
+            },
+            {
+              title: '常驻数量',
+              dataIndex: 'count',
+              width: 90,
+              render: (count: number) => `${count} 只`,
+            },
+            ...(access.canGameControl && access.canViewPlayers
+              ? [
+                  {
+                    title: '操作',
+                    key: 'actions',
+                    width: 100,
+                    render: (_: unknown, spawn: Spawn & { name: string }) => (
+                      <CharacterNavigationModal
+                        map={spawn.map}
+                        mapName={spawn.name}
+                        name={spawn.name}
+                        x={spawn.x}
+                        y={spawn.y}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
       ) : (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}

@@ -1,3 +1,4 @@
+import monsterSpawnMaps from './zh-CN/monster-spawn-maps.json';
 import characterFields from './zh-CN/character-fields';
 import component from './zh-CN/component';
 import globalHeader from './zh-CN/globalHeader';
@@ -9,6 +10,7 @@ import settingDrawer from './zh-CN/settingDrawer';
 import settings from './zh-CN/settings';
 
 export default {
+  ...monsterSpawnMaps,
   'players.map.airplane': '飞空艇',
   'settings.gameData.title': '游戏资料',
   'settings.gameData.loadFailed': '游戏资料设置加载失败',
